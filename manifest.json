@@ -1,0 +1,13 @@
+{
+  "name": "Mi Reventa",
+  "short_name": "Mi Reventa",
+  "description": "Control de inventario y caja para reventa de ropa.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2EFF4",
+  "theme_color": "#F2EFF4",
+  "icons": [
+    { "src": "icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
