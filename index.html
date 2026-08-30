@@ -254,7 +254,7 @@ import {
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, doc, setDoc, onSnapshot, collection, addDoc,
+  getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc,
   query, orderBy, limit, getDocs, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -269,11 +269,20 @@ var firebaseConfig = {
 var fbApp = initializeApp(firebaseConfig);
 var auth = getAuth(fbApp);
 var db = getFirestore(fbApp);
-var docRef = doc(db, 'negocio', 'datos');
+// Estructura: cada prenda, gasto, ingreso y proveedor es su propio documento.
+// Asi ninguno se acerca al tope de 1 MB por documento y, al editar, solo viaja
+// lo que cambio en vez del negocio entero.
+var docRef = doc(db, 'negocio', 'datos');        // formato viejo, se conserva de respaldo
+var configRef = doc(db, 'negocio', 'config');
+var colProductos = collection(db, 'productos');
+var colGastos = collection(db, 'gastos');
+var colIngresos = collection(db, 'ingresos');
+var colProveedores = collection(db, 'proveedores');
 var histRef = collection(db, 'historial');
+
 var MAX_VERSIONES = 20;
 var LIMITE_DOC = 1048576;        // tope duro de Firestore por documento
-var AVISO_TAMANO = 800000;       // avisar antes de chocar con el tope
+var AVISO_TAMANO = 800000;       // avisar antes de chocar con el tope (por prenda)
 
 // Construido sobre la version 1787976724-4d01 (estado publicado: sin prendas ni gastos),
 // agregando inicio de sesion con Google y sincronizacion en Firestore para compartir
@@ -306,6 +315,16 @@ var histCargando = false;
 var histEntradas = [];
 var armedHist = null;
 var ultimoArchivado = 0;
+
+// Espejo de lo ultimo confirmado por el servidor. save() compara contra esto para
+// escribir solo lo que cambio, y para saber que se borro.
+var espejo = { config: null, productos: {}, gastos: {}, ingresos: {}, proveedores: {} };
+// datosListos solo se activa cuando las 5 fuentes cargaron: escribir con el estado
+// a medias borraria lo que todavia no llego.
+var fuentesCargadas = {};
+var FUENTES = ['config', 'productos', 'gastos', 'ingresos', 'proveedores'];
+var unsubs = [];
+var migrando = false;
 
 function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function pad(n){ return n < 10 ? '0' + n : '' + n; }
@@ -570,38 +589,82 @@ function totals(){
 // las cuentas autorizadas. No escribe nada hasta que llego el primer snapshot real
 // (datosListos), para no pisar los datos de la otra persona con el estado vacio
 // de arranque mientras se conecta.
-function save(){
-  rememberTab();
-  if (!datosListos || !usuario) return;
-
-  var serializado = JSON.stringify(state);
-  if (serializado.length > LIMITE_DOC){
-    toast('Superaste el limite de 1 MB de Firestore. Borra fotos de prendas vendidas para poder guardar.');
+function manejarErrorEscritura(err){
+  if (err && err.code === 'permission-denied'){
+    gateEstado = 'sin-acceso';
+    renderGate();
     return;
   }
+  toast('No se pudo guardar. Revisa tu conexion.');
+}
 
-  setDoc(docRef, state).then(function(){
-    archivarVersion(serializado);
-  }, function(err){
-    if (err && err.code === 'permission-denied'){
-      gateEstado = 'sin-acceso';
-      renderGate();
+// Escribe solo las entidades que cambiaron desde la ultima confirmacion del servidor,
+// y borra las que desaparecieron. Evita reenviar el negocio completo en cada edicion.
+function sincronizarColeccion(lista, col, espejoCol){
+  var vistos = {};
+  lista.forEach(function(item){
+    vistos[item.id] = true;
+    var serial = JSON.stringify(item);
+    if (espejoCol[item.id] === serial) return;
+    if (serial.length > LIMITE_DOC){
+      toast('"' + (item.nombre || item.concepto || 'Un registro') + '" pesa mas de 1 MB. Quitale alguna foto.');
       return;
     }
-    toast('No se pudo guardar. Revisa tu conexion.');
+    espejoCol[item.id] = serial;
+    setDoc(doc(col, item.id), item).catch(function(err){
+      delete espejoCol[item.id];
+      manejarErrorEscritura(err);
+    });
+  });
+  Object.keys(espejoCol).forEach(function(id){
+    if (vistos[id]) return;
+    delete espejoCol[id];
+    deleteDoc(doc(col, id)).catch(manejarErrorEscritura);
   });
 }
 
-// Guarda una copia del estado recien escrito para poder volver atras.
+function save(){
+  rememberTab();
+  if (!datosListos || !usuario || migrando) return;
+
+  var conf = JSON.stringify({ capitalInicial: state.capitalInicial });
+  if (espejo.config !== conf){
+    espejo.config = conf;
+    setDoc(configRef, { capitalInicial: state.capitalInicial }).catch(function(err){
+      espejo.config = null;
+      manejarErrorEscritura(err);
+    });
+  }
+
+  sincronizarColeccion(state.products, colProductos, espejo.productos);
+  sincronizarColeccion(state.gastos, colGastos, espejo.gastos);
+  sincronizarColeccion(state.ingresos, colIngresos, espejo.ingresos);
+  sincronizarColeccion(state.proveedores, colProveedores, espejo.proveedores);
+
+  archivarVersion();
+}
+
+// Copia para volver atras. Se guarda SIN fotos: son el 99% del peso, casi nunca es
+// lo que hace falta recuperar, y con ellas cada copia chocaria contra el tope de 1 MB.
+// Al restaurar, las fotos de las prendas que sigan existiendo se conservan.
+function estadoSinFotos(){
+  var copia = JSON.parse(JSON.stringify(state));
+  copia.products.forEach(function(p){ p.fotos = []; });
+  return copia;
+}
+
 // Se limita a una version por minuto para no duplicar trafico al editar seguido,
 // y solo conserva las ultimas MAX_VERSIONES.
-function archivarVersion(serializado){
+function archivarVersion(){
   var ahora = Date.now();
   if (ahora - ultimoArchivado < 60000) return;
   ultimoArchivado = ahora;
 
+  var serial = JSON.stringify(estadoSinFotos());
+  if (serial.length > LIMITE_DOC){ ultimoArchivado = 0; return; }
+
   addDoc(histRef, {
-    datos: serializado,
+    datos: serial,
     fecha: new Date().toISOString(),
     autor: usuario ? usuario.email : '',
     prendas: state.products.length
@@ -670,7 +733,7 @@ function renderHistorial(){
         + (typeof v.prendas === 'number' ? ' &middot; ' + v.prendas + ' prenda' + (v.prendas === 1 ? '' : 's') : '')
         + '</div>'
         + (armed
-            ? '<div class="confirm-box" style="margin-top:10px"><div class="confirm-text">Se reemplaza todo el inventario por esta version. La version actual queda guardada en el historial, asi que puedes volver.</div>'
+            ? '<div class="confirm-box" style="margin-top:10px"><div class="confirm-text">Se reemplaza todo el inventario por esta version. La version actual queda guardada en el historial, asi que puedes volver.<br><br>Las prendas que hoy existen conservan sus fotos. Una prenda que se haya borrado vuelve con todos sus datos pero <b>sin foto</b>: el historial no las guarda para no ocupar demasiado.</div>'
               + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-hist">Cancelar</button>'
               + '<button class="btn solid-danger" data-act="do-restore" data-value="' + esc(v.id) + '">Si, restaurar</button></div></div>'
             : '<button class="btn secondary" style="margin-top:10px" data-act="arm-hist" data-value="' + esc(v.id) + '">Restaurar esta version</button>')
@@ -712,6 +775,11 @@ function renderGate(){
     root.innerHTML = '<div class="gate"><div class="spinner"></div><div class="gate-text">Cargando tus datos...</div></div>';
     return;
   }
+  if (gateEstado === 'migrando'){
+    root.innerHTML = '<div class="gate"><div class="spinner"></div>'
+      + '<div class="gate-text">Actualizando el formato de tus datos.<br>No cierres la app.</div></div>';
+    return;
+  }
   if (gateEstado === 'sin-acceso'){
     root.innerHTML = '<div class="gate"><span class="gate-icon">&#128274;</span>'
       + '<span class="gate-brand" style="font-size:22px">Sin acceso</span>'
@@ -724,29 +792,117 @@ function renderGate(){
     + '<button type="button" class="btn secondary" style="width:auto;padding:11px 20px" data-act="reintentar">Reintentar</button></div>';
 }
 
+function errorDeDatos(err){
+  datosListos = false;
+  gateEstado = (err && err.code === 'permission-denied') ? 'sin-acceso' : 'error-datos';
+  renderGate();
+}
+
+function marcarCargada(nombre){
+  fuentesCargadas[nombre] = true;
+  if (datosListos) return true;
+  var faltan = FUENTES.some(function(f){ return !fuentesCargadas[f]; });
+  if (faltan) return false;
+  datosListos = true;
+  gateEstado = null;
+  renderGate();
+  migrarSiHaceFalta();
+  return true;
+}
+
+function refrescar(){
+  // En la pestana Agregar no se reconstruye el formulario ante un cambio remoto,
+  // para no borrar lo que la persona esta escribiendo en ese momento.
+  if (tab === 'agregar') renderTopbar();
+  else render();
+}
+
+// Cada coleccion se refleja en su parte del estado. El eco de nuestra propia
+// escritura (hasPendingWrites) ya esta en pantalla, asi que no se reaplica.
+function suscribirColeccion(col, nombre, campo, normalizar){
+  return onSnapshot(col, function(snap){
+    if (!snap.metadata.hasPendingWrites || !datosListos){
+      var items = snap.docs.map(function(d){
+        var v = d.data();
+        v.id = d.id;
+        return v;
+      });
+      espejo[nombre] = {};
+      items.forEach(function(it){ espejo[nombre][it.id] = JSON.stringify(it); });
+      state[campo] = normalizar ? normalizar(items) : items;
+      state = migrate(state);
+      // migrate() puede rellenar campos: el espejo debe reflejar lo que hay en el servidor,
+      // no lo normalizado, para no disparar escrituras infinitas.
+    }
+    if (marcarCargada(nombre)) refrescar();
+  }, errorDeDatos);
+}
+
 function suscribirDatos(){
-  unsubscribeDatos = onSnapshot(docRef, function(snap){
-    // Solo se reemplaza el estado local con lecturas confirmadas por el servidor:
-    // el eco de nuestra propia escritura (hasPendingWrites) ya esta reflejado en pantalla.
-    if (!snap.metadata.hasPendingWrites){
-      var data = snap.exists() ? snap.data() : { capitalInicial: 0, products: [], gastos: [], ingresos: [], proveedores: [] };
-      state = migrate(data);
+  fuentesCargadas = {};
+  datosListos = false;
+  unsubs.forEach(function(u){ try{ u(); }catch(e){} });
+  unsubs = [];
+
+  unsubs.push(onSnapshot(configRef, function(snap){
+    if (!snap.metadata.hasPendingWrites || !datosListos){
+      var v = snap.exists() ? snap.data() : {};
+      state.capitalInicial = num(v.capitalInicial);
+      espejo.config = JSON.stringify({ capitalInicial: state.capitalInicial });
     }
-    datosListos = true;
-    gateEstado = null;
+    if (marcarCargada('config')) refrescar();
+  }, errorDeDatos));
+
+  unsubs.push(suscribirColeccion(colProductos, 'productos', 'products'));
+  unsubs.push(suscribirColeccion(colGastos, 'gastos', 'gastos'));
+  unsubs.push(suscribirColeccion(colIngresos, 'ingresos', 'ingresos'));
+  unsubs.push(suscribirColeccion(colProveedores, 'proveedores', 'proveedores'));
+
+  unsubscribeDatos = function(){
+    unsubs.forEach(function(u){ try{ u(); }catch(e){} });
+    unsubs = [];
+  };
+}
+
+// Pasa el formato viejo (todo el negocio en negocio/datos) al nuevo (un documento por
+// entidad). Solo corre si el formato nuevo esta vacio, asi que es seguro repetirla.
+// El documento viejo NO se borra: queda como respaldo.
+function migrarSiHaceFalta(){
+  var vacio = !state.products.length && !state.gastos.length
+    && !state.ingresos.length && !state.proveedores.length;
+  if (!vacio) return;
+
+  getDoc(docRef).then(function(snap){
+    if (!snap.exists()) return;
+    var viejo = migrate(snap.data());
+    var total = viejo.products.length + viejo.gastos.length
+      + viejo.ingresos.length + viejo.proveedores.length;
+    if (!total) return;
+
+    migrando = true;
+    gateEstado = 'migrando';
     renderGate();
-    // En la pestana Agregar no se reconstruye el formulario completo ante un cambio
-    // remoto, para no borrar lo que la persona esta escribiendo en ese momento.
-    if (tab === 'agregar' && !snap.metadata.hasPendingWrites){
-      renderTopbar();
-    } else {
-      render();
-    }
-  }, function(err){
-    datosListos = false;
-    gateEstado = (err && err.code === 'permission-denied') ? 'sin-acceso' : 'error-datos';
-    renderGate();
-  });
+
+    var tareas = [];
+    viejo.products.forEach(function(p){ tareas.push(setDoc(doc(colProductos, p.id), p)); });
+    viejo.gastos.forEach(function(g){ tareas.push(setDoc(doc(colGastos, g.id), g)); });
+    viejo.ingresos.forEach(function(i){ tareas.push(setDoc(doc(colIngresos, i.id), i)); });
+    viejo.proveedores.forEach(function(v){ tareas.push(setDoc(doc(colProveedores, v.id), v)); });
+    tareas.push(setDoc(configRef, { capitalInicial: viejo.capitalInicial }));
+
+    Promise.all(tareas).then(function(){
+      migrando = false;
+      gateEstado = null;
+      renderGate();
+      toast('Datos migrados al formato nuevo: ' + viejo.products.length + ' prenda' + (viejo.products.length === 1 ? '' : 's') + '.');
+    }, function(err){
+      migrando = false;
+      gateEstado = null;
+      renderGate();
+      manejarErrorEscritura(err);
+      toast('La migracion no se completo. Tus datos viejos siguen intactos.');
+    });
+  }).catch(function(){});
 }
 
 onAuthStateChanged(auth, function(user){
@@ -1067,16 +1223,21 @@ function viewResumen(){
     + '<input type="file" accept="application/json,.json" id="f-restaurar"></label>';
 }
 
-// Firestore no admite documentos de mas de 1 MB. Como todo el negocio va en uno
-// solo, conviene avisar antes de llegar al tope y no cuando ya no se pueda guardar.
+// Cada prenda es su propio documento y Firestore admite 1 MB por documento, asi que
+// el limite aplica por prenda (por sus fotos), no al negocio entero.
 function avisoTamano(){
-  var bytes = 0;
-  try{ bytes = JSON.stringify(state).length; }catch(e){ return ''; }
-  if (bytes < AVISO_TAMANO) return '';
-  var pct = Math.round(bytes / LIMITE_DOC * 100);
+  var peor = null, peorBytes = 0;
+  try{
+    state.products.forEach(function(p){
+      var b = JSON.stringify(p).length;
+      if (b > peorBytes){ peorBytes = b; peor = p; }
+    });
+  }catch(e){ return ''; }
+  if (peorBytes < AVISO_TAMANO) return '';
+  var pct = Math.round(peorBytes / LIMITE_DOC * 100);
   return '<div class="check-row" style="cursor:default;margin-top:14px"><span style="font-size:19px">&#9888;</span>'
-    + '<span><span class="ct">Espacio al ' + pct + '%</span>'
-    + '<span class="cs">Firestore permite 1 MB y las fotos son lo que mas ocupa. Al llegar al 100% no vas a poder guardar. Borra fotos de prendas ya vendidas, o pideme reestructurar la app para guardar las fotos aparte.</span></span></div>';
+    + '<span><span class="ct">"' + esc(peor.nombre) + '" ocupa el ' + pct + '% del limite</span>'
+    + '<span class="cs">Firestore permite 1 MB por prenda y las fotos son lo que mas pesa. Quitale alguna foto para poder seguir editandola.</span></span></div>';
 }
 
 function avisoRespaldo(){
@@ -1417,7 +1578,14 @@ document.addEventListener('click', function(e){
       toast('Esa version esta danada y no se puede restaurar.');
       return;
     }
-    state = migrate(datos);
+    // El historial no guarda fotos: se reponen desde las prendas actuales que sigan existiendo.
+    var fotosActuales = {};
+    state.products.forEach(function(p){ fotosActuales[p.id] = p.fotos; });
+    datos = migrate(datos);
+    datos.products.forEach(function(p){
+      if ((!p.fotos || !p.fotos.length) && fotosActuales[p.id]) p.fotos = fotosActuales[p.id];
+    });
+    state = datos;
     histOpen = false; armedHist = null;
     openId = null; provOpen = false;
     ultimoArchivado = 0;   // la version restaurada debe quedar archivada enseguida
