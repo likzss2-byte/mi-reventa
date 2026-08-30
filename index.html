@@ -244,6 +244,7 @@ h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;le
   <div id="modal-root"></div>
   <div id="prov-root"></div>
   <div id="hist-root"></div>
+  <div id="pap-root"></div>
   <div id="gate-root"></div>
   <div class="toast-root" id="toast-root"></div>
 </div>
@@ -279,8 +280,10 @@ var colGastos = collection(db, 'gastos');
 var colIngresos = collection(db, 'ingresos');
 var colProveedores = collection(db, 'proveedores');
 var histRef = collection(db, 'historial');
+var colPapelera = collection(db, 'papelera');
 
 var MAX_VERSIONES = 20;
+var MAX_PAPELERA = 30;
 var LIMITE_DOC = 1048576;        // tope duro de Firestore por documento
 var AVISO_TAMANO = 800000;       // avisar antes de chocar con el tope (por prenda)
 
@@ -315,6 +318,11 @@ var histCargando = false;
 var histEntradas = [];
 var armedHist = null;
 var ultimoArchivado = 0;
+
+var papOpen = false;
+var papCargando = false;
+var papEntradas = [];
+var armedPap = null;
 
 // Espejo de lo ultimo confirmado por el servidor. save() compara contra esto para
 // escribir solo lo que cambio, y para saber que se borro.
@@ -683,6 +691,85 @@ function podarHistorial(){
   }).catch(function(){});
 }
 
+// Al borrar una prenda se guarda entera (fotos incluidas) en la papelera, para poder
+// devolverla tal cual. Solo se conservan las ultimas MAX_PAPELERA.
+function mandarAPapelera(p){
+  var copia = JSON.parse(JSON.stringify(p));
+  copia.borradoEn = new Date().toISOString();
+  copia.borradoPor = usuario ? usuario.email : '';
+  return setDoc(doc(colPapelera, p.id), copia).then(podarPapelera).catch(function(){});
+}
+
+function podarPapelera(){
+  return getDocs(query(colPapelera, orderBy('borradoEn', 'desc'))).then(function(snap){
+    var docs = snap.docs;
+    for (var i = MAX_PAPELERA; i < docs.length; i++){
+      deleteDoc(docs[i].ref).catch(function(){});
+    }
+  }).catch(function(){});
+}
+
+function cargarPapelera(){
+  papCargando = true;
+  renderPapelera();
+  getDocs(query(colPapelera, orderBy('borradoEn', 'desc'), limit(MAX_PAPELERA))).then(function(snap){
+    papEntradas = snap.docs.map(function(d){
+      var v = d.data();
+      v.id = d.id;
+      return v;
+    });
+    papCargando = false;
+    renderPapelera();
+  }).catch(function(){
+    papCargando = false;
+    papEntradas = [];
+    renderPapelera();
+    toast('No se pudo cargar la papelera.');
+  });
+}
+
+function renderPapelera(){
+  var root = document.getElementById('pap-root');
+  if (!papOpen){ root.innerHTML = ''; return; }
+
+  var cuerpo;
+  if (papCargando){
+    cuerpo = '<div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>';
+  } else if (!papEntradas.length){
+    cuerpo = '<div class="hint">La papelera esta vacia. Las prendas que borres quedan aca por si te arrepientes.</div>';
+  } else {
+    cuerpo = papEntradas.map(function(p){
+      var armed = armedPap === p.id;
+      var foto = (p.fotos && p.fotos.length)
+        ? '<img src="' + esc(p.fotos[0]) + '" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:9px;flex-shrink:0">'
+        : '<span style="font-size:26px;flex-shrink:0">&#128086;</span>';
+      return '<div class="prov-card">'
+        + '<div style="display:flex;gap:11px;align-items:center">' + foto
+        + '<div style="min-width:0"><div style="font-weight:700;font-size:14px">' + esc(p.nombre) + '</div>'
+        + '<div class="prov-stats" style="margin-top:3px">' + money(p.precioVenta)
+        + ' &middot; costo ' + money(p.costo) + '</div>'
+        + '<div class="prov-stats" style="margin-top:2px">Borrada ' + esc(fechaLegible(p.borradoEn))
+        + (p.borradoPor ? ' por ' + esc(p.borradoPor.split('@')[0]) : '') + '</div></div></div>'
+        + (armed
+            ? '<div class="confirm-box" style="margin-top:10px"><div class="confirm-text">Se borra definitivamente, con sus fotos y ventas. Esto ya no se puede deshacer.</div>'
+              + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-pap">Cancelar</button>'
+              + '<button class="btn solid-danger" data-act="purgar-pap" data-value="' + esc(p.id) + '">Si, borrar</button></div></div>'
+            : '<div style="display:flex;gap:8px;margin-top:10px">'
+              + '<button class="btn secondary" style="flex:1" data-act="restaurar-pap" data-value="' + esc(p.id) + '">Restaurar</button>'
+              + '<button class="btn danger" style="width:auto;padding:13px 16px" data-act="arm-pap" data-value="' + esc(p.id) + '">Borrar ya</button></div>')
+        + '</div>';
+    }).join('');
+  }
+
+  root.innerHTML = '<div class="modal-backdrop top" data-act="close-pap">'
+    + '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-head"><h2>Papelera</h2><button class="modal-close" data-act="close-pap" aria-label="Cerrar">&times;</button></div>'
+    + '<div class="hint" style="margin-bottom:14px">Las prendas borradas se guardan aca con sus fotos. Se conservan las ultimas ' + MAX_PAPELERA + '.</div>'
+    + cuerpo
+    + '</div></div>';
+}
+
 function cargarHistorial(){
   histCargando = true;
   renderHistorial();
@@ -733,7 +820,7 @@ function renderHistorial(){
         + (typeof v.prendas === 'number' ? ' &middot; ' + v.prendas + ' prenda' + (v.prendas === 1 ? '' : 's') : '')
         + '</div>'
         + (armed
-            ? '<div class="confirm-box" style="margin-top:10px"><div class="confirm-text">Se reemplaza todo el inventario por esta version. La version actual queda guardada en el historial, asi que puedes volver.<br><br>Las prendas que hoy existen conservan sus fotos. Una prenda que se haya borrado vuelve con todos sus datos pero <b>sin foto</b>: el historial no las guarda para no ocupar demasiado.</div>'
+            ? '<div class="confirm-box" style="margin-top:10px"><div class="confirm-text">Se reemplaza todo el inventario por esta version. La version actual queda guardada en el historial, asi que puedes volver.<br><br>Las fotos se recuperan de las prendas actuales y de la papelera.</div>'
               + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-hist">Cancelar</button>'
               + '<button class="btn solid-danger" data-act="do-restore" data-value="' + esc(v.id) + '">Si, restaurar</button></div></div>'
             : '<button class="btn secondary" style="margin-top:10px" data-act="arm-hist" data-value="' + esc(v.id) + '">Restaurar esta version</button>')
@@ -1211,9 +1298,10 @@ function viewResumen(){
     + '<div class="section-title" style="margin-top:26px">Cuenta</div>'
     + '<div class="hint" style="margin-bottom:10px">Conectado como ' + esc(usuario ? usuario.email : '') + '. Los datos se comparten con quien mas tenga acceso a este negocio.</div>'
     + '<button class="btn secondary" data-act="signout">Cerrar sesion</button>'
-    + '<div class="section-title" style="margin-top:26px">Historial de cambios</div>'
-    + '<div class="hint" style="margin-bottom:10px">Si alguno borra algo por error, puedes volver a como estaba. Se guardan las ultimas ' + MAX_VERSIONES + ' versiones.</div>'
-    + '<button class="btn secondary" data-act="open-hist">Ver historial</button>'
+    + '<div class="section-title" style="margin-top:26px">Recuperar</div>'
+    + '<div class="hint" style="margin-bottom:10px">Las prendas borradas van a la papelera con sus fotos. El historial guarda las ultimas ' + MAX_VERSIONES + ' versiones del negocio, por si hay que deshacer varios cambios.</div>'
+    + '<button class="btn secondary" data-act="open-pap">Papelera</button>'
+    + '<button class="btn secondary" style="margin-top:10px" data-act="open-hist">Historial de cambios</button>'
     + avisoTamano()
     + '<div class="section-title" style="margin-top:26px">Respaldo</div>'
     + avisoRespaldo()
@@ -1289,10 +1377,10 @@ function renderModal(){
 
   var nVentas = p.ventas.length;
   var avisoBorrado = nVentas === 0
-    ? 'Se borran la prenda y sus fotos. No se puede deshacer.'
+    ? 'La prenda sale del inventario y va a la papelera, donde puedes recuperarla con sus fotos.'
     : nVentas === 1
-      ? 'Se borran la prenda, su venta y sus fotos. No se puede deshacer.'
-      : 'Se borran la prenda, sus ' + nVentas + ' ventas y sus fotos. No se puede deshacer.';
+      ? 'La prenda y su venta salen del inventario y van a la papelera, donde puedes recuperarlas.'
+      : 'La prenda y sus ' + nVentas + ' ventas salen del inventario y van a la papelera, donde puedes recuperarlas.';
   var deleteBlock = askDelete
     ? '<div class="confirm-box"><div class="confirm-text">' + avisoBorrado + '</div>'
       + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-delete">Cancelar</button>'
@@ -1560,6 +1648,40 @@ document.addEventListener('click', function(e){
   if (act === 'signout'){ signOut(auth); return; }
   if (act === 'reintentar'){ location.reload(); return; }
 
+  if (act === 'open-pap'){ papOpen = true; armedPap = null; cargarPapelera(); return; }
+  if (act === 'close-pap'){
+    if (e.target !== el) return;
+    papOpen = false; armedPap = null; renderPapelera(); return;
+  }
+  if (act === 'arm-pap'){ armedPap = val; renderPapelera(); return; }
+  if (act === 'cancel-pap'){ armedPap = null; renderPapelera(); return; }
+  if (act === 'restaurar-pap'){
+    var recuperada = null;
+    papEntradas.forEach(function(p){ if (p.id === val) recuperada = p; });
+    if (!recuperada){ toast('No se encontro esa prenda.'); return; }
+    var limpia = JSON.parse(JSON.stringify(recuperada));
+    delete limpia.borradoEn;
+    delete limpia.borradoPor;
+    if (find(limpia.id)){ toast('Esa prenda ya esta en el inventario.'); return; }
+    state.products.unshift(limpia);
+    papEntradas = papEntradas.filter(function(p){ return p.id !== val; });
+    deleteDoc(doc(colPapelera, val)).catch(function(){});
+    papOpen = false; armedPap = null;
+    render(); save();
+    toast('"' + limpia.nombre + '" restaurada con sus fotos.');
+    return;
+  }
+  if (act === 'purgar-pap'){
+    var nombrePurgado = '';
+    papEntradas.forEach(function(p){ if (p.id === val) nombrePurgado = p.nombre; });
+    papEntradas = papEntradas.filter(function(p){ return p.id !== val; });
+    armedPap = null;
+    deleteDoc(doc(colPapelera, val)).catch(function(){});
+    renderPapelera();
+    toast('"' + nombrePurgado + '" borrada definitivamente.');
+    return;
+  }
+
   if (act === 'open-hist'){ histOpen = true; armedHist = null; cargarHistorial(); return; }
   if (act === 'close-hist'){
     if (e.target !== el) return;
@@ -1578,19 +1700,34 @@ document.addEventListener('click', function(e){
       toast('Esa version esta danada y no se puede restaurar.');
       return;
     }
-    // El historial no guarda fotos: se reponen desde las prendas actuales que sigan existiendo.
+    // El historial no guarda fotos. Se reponen desde las prendas actuales, y para las
+    // que ya no existen, desde la papelera.
     var fotosActuales = {};
     state.products.forEach(function(p){ fotosActuales[p.id] = p.fotos; });
     datos = migrate(datos);
     datos.products.forEach(function(p){
       if ((!p.fotos || !p.fotos.length) && fotosActuales[p.id]) p.fotos = fotosActuales[p.id];
     });
-    state = datos;
-    histOpen = false; armedHist = null;
-    openId = null; provOpen = false;
-    ultimoArchivado = 0;   // la version restaurada debe quedar archivada enseguida
-    render(); save();
-    toast('Restaurado: ' + state.products.length + ' prenda' + (state.products.length === 1 ? '' : 's') + '.');
+
+    var faltantes = datos.products.filter(function(p){ return !p.fotos || !p.fotos.length; });
+    var aplicar = function(){
+      state = datos;
+      histOpen = false; armedHist = null;
+      openId = null; provOpen = false;
+      ultimoArchivado = 0;   // la version restaurada debe quedar archivada enseguida
+      render(); save();
+      toast('Restaurado: ' + state.products.length + ' prenda' + (state.products.length === 1 ? '' : 's') + '.');
+    };
+
+    if (!faltantes.length){ aplicar(); return; }
+    Promise.all(faltantes.map(function(p){
+      return getDoc(doc(colPapelera, p.id)).then(function(snap){
+        if (snap.exists()){
+          var v = snap.data();
+          if (v.fotos && v.fotos.length) p.fotos = v.fotos;
+        }
+      }).catch(function(){});
+    })).then(aplicar, aplicar);
     return;
   }
 
@@ -1664,10 +1801,12 @@ document.addEventListener('click', function(e){
   if (act === 'cancel-delete'){ askDelete = false; renderModal(); return; }
   if (act === 'confirm-delete'){
     var borrada = find(openId);
+    // Se copia a la papelera ANTES de quitarla, para poder devolverla con sus fotos.
+    if (borrada) mandarAPapelera(borrada);
     state.products = state.products.filter(function(x){ return x.id !== openId; });
     openId = null; askDelete = false;
     render(); save();
-    toast('"' + (borrada ? borrada.nombre : 'Prenda') + '" eliminada.');
+    toast('"' + (borrada ? borrada.nombre : 'Prenda') + '" movida a la papelera.');
     return;
   }
 });
