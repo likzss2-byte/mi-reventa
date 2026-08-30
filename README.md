@@ -3,22 +3,34 @@
 App para llevar el control de un negocio de reventa de ropa: inventario con fotos,
 tallas y cantidades, movimientos de caja y resumen de ganancias.
 
-Es una sola pagina HTML sin dependencias ni servidor.
+Es una sola pagina HTML sin servidor propio ni build. El unico servicio externo es
+Firebase (Auth + Firestore) para el inicio de sesion y guardar los datos.
 
 ## Uso
 
-Abrir la URL en el navegador. En iPhone conviene agregarla a la pantalla de inicio
-(Safari, boton Compartir, "Agregar a inicio") para que se comporte como una app.
+Abrir la URL en el navegador e iniciar sesion con la cuenta de Google autorizada.
+En iPhone conviene agregarla a la pantalla de inicio (Safari, boton Compartir,
+"Agregar a inicio") para que se comporte como una app.
 
 ## Donde viven los datos
 
-Todo se guarda en el almacenamiento local del navegador del dispositivo. No hay
-servidor ni cuenta: los datos no salen del telefono y no se sincronizan entre equipos.
+Los datos se guardan en Firestore y se sincronizan en tiempo real entre las cuentas
+de Google que tengan acceso. Cualquiera puede abrir la URL, pero sin una cuenta
+autorizada solo ve la pantalla de inicio de sesion o un aviso de "Sin acceso" — nunca
+los datos del negocio. El acceso se controla en las reglas de seguridad de Firestore
+(consola de Firebase), no en el codigo de este repositorio.
 
-**Por eso el respaldo importa.** En la pestana Resumen hay un boton para descargar
-un archivo `.json` con todo, y otro para restaurarlo. Conviene bajar uno cada tanto y
-guardarlo en Archivos o iCloud. Si se borran los datos de Safari, ese archivo es lo
-unico que permite recuperar el inventario.
+**Respaldo.** Aunque los datos ya viven en la nube, en la pestana Resumen hay un boton
+para descargar un archivo `.json` con todo, y otro para restaurarlo. Sirve como copia
+extra por si hace falta recuperar algo o se quiere trabajar sin conexion.
+
+## Configuracion de Firebase
+
+`index.html` incluye el `firebaseConfig` del proyecto (esos valores son publicos por
+diseno: la seguridad real la dan las reglas de Firestore, no el codigo del cliente).
+Para replicar el proyecto: crear un proyecto en Firebase, activar Authentication con
+el proveedor de Google, crear una base de datos Firestore, y en Reglas restringir
+lectura/escritura a los correos autorizados.
 
 ## Que registra
 
