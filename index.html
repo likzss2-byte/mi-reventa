@@ -247,7 +247,7 @@ h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;le
 <script id="app-logic" type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult,
+  getAuth, GoogleAuthProvider, signInWithPopup,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
@@ -644,10 +644,6 @@ onAuthStateChanged(auth, function(user){
   gateEstado = 'cargando-datos';
   renderGate();
   suscribirDatos();
-});
-
-getRedirectResult(auth).catch(function(){
-  toast('No se pudo completar el inicio de sesion.');
 });
 
 function descargarRespaldo(){
@@ -1255,8 +1251,13 @@ document.addEventListener('click', function(e){
   }
 
   if (act === 'signin-google'){
-    signInWithRedirect(auth, new GoogleAuthProvider()).catch(function(){
-      toast('No se pudo abrir el inicio de sesion.');
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(function(err){
+      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
+      if (err && err.code === 'auth/popup-blocked'){
+        toast('El navegador bloqueo la ventana. Permite ventanas emergentes para este sitio.');
+        return;
+      }
+      toast('No se pudo iniciar sesion' + (err && err.code ? ' (' + err.code + ')' : '') + '.');
     });
     return;
   }
