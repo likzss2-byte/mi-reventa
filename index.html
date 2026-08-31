@@ -75,7 +75,7 @@ button,input,select{font-family:inherit;color:inherit}
 .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:8px}
 h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;letter-spacing:.02em}
 .section-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin:0 0 12px}
-.hero-tile+.section-title,.stat-grid+.section-title,.bar-compare+.section-title,.cap-box+.section-title,.gasto-list+.section-title,.hint+.section-title{margin-top:26px}
+.hero-tile+.section-title,.stat-grid+.section-title,.bar-compare+.section-title,.cap-box+.section-title,.gasto-list+.section-title,.hint+.section-title,.btn+.section-title{margin-top:26px}
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .chip{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
@@ -337,10 +337,15 @@ var colGastos = collection(db, 'gastos');
 var colIngresos = collection(db, 'ingresos');   // ya no se usa: solo queda para limpiarla
 var colProveedores = collection(db, 'proveedores');
 var colApartados = collection(db, 'apartados');
+var colSuscripciones = collection(db, 'suscripciones');
 var histRef = collection(db, 'historial');
 var colPapelera = collection(db, 'papelera');
 
 var DIAS_APARTADO = 14;          // plazo para liquidar un apartado
+// Clave publica VAPID: identifica a esta app ante el servicio de notificaciones.
+// Es publica por diseno; la privada solo la tiene quien manda los avisos.
+var VAPID_PUBLICA = 'BOAy2Mr7WoJA5LlQnqnD-zkZSsYG-ky3rYghVzN1bZDgNRqyHx6lfTGGDfWLxF7s_xcrMpUJ4o65kphhjAtTA0Y';
+var AVISOS_ENVIO_LISTO = false;  // pasa a true cuando el envio diario este montado
 var MAX_VERSIONES = 20;
 var MAX_PAPELERA = 30;
 var LIMITE_DOC = 1048576;        // tope duro de Firestore por documento
@@ -389,6 +394,10 @@ var ventaOpen = false;
 var ventaItems = [];
 var ventaValores = {};
 var ventaForm = { fecha: '', apartado: false, cliente: '', abono: '' };
+
+var CLAVE_DISPOSITIVO = 'mi_reventa_dispositivo';
+var avisosEstado = 'revisando';
+var abrirApartadosAlCargar = false;
 
 var apOpen = false;
 var apDetalle = null;
@@ -1072,6 +1081,13 @@ function marcarCargada(nombre){
   renderGate();
   migrarSiHaceFalta();
   limpiarIngresosViejos();
+  revisarAvisos();
+  // Si se llego tocando una notificacion, se abre directo en apartados.
+  if (abrirApartadosAlCargar){
+    abrirApartadosAlCargar = false;
+    tab = 'resumen';
+    apOpen = true; apDetalle = null; apAccion = null; apFiltro = 'activo';
+  }
   return true;
 }
 
@@ -1192,6 +1208,196 @@ onAuthStateChanged(auth, function(user){
   renderGate();
   suscribirDatos();
 });
+
+// ---------- avisos en el telefono ----------
+// Apple solo permite notificaciones web si la app se abrio desde el icono de la
+// pantalla de inicio. En una pestana normal de Safari ni siquiera existe la API.
+function esStandalone(){
+  try{
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  }catch(e){ return navigator.standalone === true; }
+}
+
+function esIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function soportaAvisos(){
+  return 'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined';
+}
+
+// Un id propio por telefono, para que reactivar no deje suscripciones duplicadas.
+function idDispositivo(){
+  try{
+    var v = localStorage.getItem(CLAVE_DISPOSITIVO);
+    if (!v){ v = uid('d'); localStorage.setItem(CLAVE_DISPOSITIVO, v); }
+    return v;
+  }catch(e){ return 'sin-almacenamiento'; }
+}
+
+function claveVapid(base64){
+  var relleno = '='.repeat((4 - base64.length % 4) % 4);
+  var limpio = (base64 + relleno).replace(/-/g, '+').replace(/_/g, '/');
+  var crudo = atob(limpio);
+  var salida = new Uint8Array(crudo.length);
+  for (var i = 0; i < crudo.length; i++) salida[i] = crudo.charCodeAt(i);
+  return salida;
+}
+
+function guardarSuscripcion(sub){
+  if (!usuario || !sub) return Promise.resolve();
+  var datos;
+  try{ datos = JSON.parse(JSON.stringify(sub)); }catch(e){ return Promise.resolve(); }
+  return setDoc(doc(colSuscripciones, idDispositivo()), {
+    endpoint: datos.endpoint || '',
+    p256dh: (datos.keys && datos.keys.p256dh) || '',
+    auth: (datos.keys && datos.keys.auth) || '',
+    email: usuario.email,
+    navegador: String(navigator.userAgent).slice(0, 180),
+    actualizado: new Date().toISOString()
+  });
+}
+
+// Al abrir la app se revisa en que estado quedo este telefono, y de paso se
+// refresca la suscripcion guardada: el navegador puede cambiarle el endpoint.
+function revisarAvisos(){
+  if (esIOS() && !esStandalone()){ avisosEstado = 'instalar'; refrescar(); return; }
+  if (!soportaAvisos()){ avisosEstado = 'no-soporta'; refrescar(); return; }
+  if (Notification.permission === 'denied'){ avisosEstado = 'bloqueado'; refrescar(); return; }
+
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    return reg.pushManager.getSubscription();
+  }).then(function(sub){
+    avisosEstado = sub ? 'activo' : 'inactivo';
+    refrescar();
+    if (sub) return guardarSuscripcion(sub);
+  }).catch(function(){
+    avisosEstado = 'inactivo';
+    refrescar();
+  });
+}
+
+function activarAvisos(){
+  if (avisosEstado === 'trabajando') return;
+  // El permiso tiene que pedirse dentro del toque, sin esperar nada antes:
+  // si se hace despues de un await, iOS lo descarta.
+  var pedido;
+  try{
+    pedido = Notification.requestPermission();
+  }catch(e){
+    toast('Este navegador no deja pedir permiso de notificaciones.');
+    return;
+  }
+  if (!pedido || typeof pedido.then !== 'function'){
+    pedido = new Promise(function(res){ setTimeout(function(){ res(Notification.permission); }, 400); });
+  }
+
+  avisosEstado = 'trabajando';
+  render();
+
+  pedido.then(function(permiso){
+    if (permiso !== 'granted'){
+      avisosEstado = (permiso === 'denied') ? 'bloqueado' : 'inactivo';
+      render();
+      toast('No se activaron los avisos.');
+      return null;
+    }
+    return navigator.serviceWorker.register('sw.js')
+      .then(function(){ return navigator.serviceWorker.ready; })
+      .then(function(reg){
+        return reg.pushManager.getSubscription().then(function(previa){
+          if (previa) return previa;
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: claveVapid(VAPID_PUBLICA)
+          });
+        });
+      })
+      .then(function(sub){ return guardarSuscripcion(sub); })
+      .then(function(){
+        avisosEstado = 'activo';
+        render();
+        toast('Avisos activados en este telefono.');
+      });
+  }).catch(function(err){
+    avisosEstado = 'inactivo';
+    render();
+    toast('No se pudieron activar los avisos' + (err && err.name ? ' (' + err.name + ')' : '') + '.');
+  });
+}
+
+function desactivarAvisos(){
+  avisosEstado = 'trabajando';
+  render();
+  navigator.serviceWorker.getRegistration().then(function(reg){
+    return reg ? reg.pushManager.getSubscription() : null;
+  }).then(function(sub){
+    return sub ? sub.unsubscribe() : true;
+  }).then(function(){
+    return deleteDoc(doc(colSuscripciones, idDispositivo())).catch(function(){});
+  }).then(function(){
+    avisosEstado = 'inactivo';
+    render();
+    toast('Avisos apagados en este telefono.');
+  }).catch(function(){
+    avisosEstado = 'activo';
+    render();
+    toast('No se pudieron apagar los avisos.');
+  });
+}
+
+// Muestra una notificacion generada en el propio telefono. Sirve para comprobar
+// que el permiso y el service worker funcionan; el envio a distancia es otra cosa.
+function avisoDePrueba(){
+  navigator.serviceWorker.getRegistration().then(function(reg){
+    if (!reg) throw new Error('sin-registro');
+    return reg.showNotification('Mi Reventa', {
+      body: 'Prueba: asi se va a ver el aviso de un apartado por vencer.',
+      icon: 'icono.png',
+      badge: 'icono.png',
+      tag: 'prueba',
+      data: { url: './index.html?ver=apartados' }
+    });
+  }).then(function(){
+    toast('Aviso de prueba enviado.');
+  }).catch(function(){
+    toast('No se pudo mostrar la notificacion de prueba.');
+  });
+}
+
+function bloqueAvisos(){
+  if (avisosEstado === 'revisando'){
+    return '<div class="hint">Revisando...</div>';
+  }
+  if (avisosEstado === 'instalar'){
+    return '<div class="hint">Para recibir avisos hay que abrir Mi Reventa desde el icono de la pantalla de inicio. '
+      + 'Si todavia no lo tienes: en Safari toca Compartir y luego "Agregar a inicio". '
+      + 'Apple no permite notificaciones desde una pestana normal.</div>';
+  }
+  if (avisosEstado === 'no-soporta'){
+    return '<div class="hint">Este navegador no permite notificaciones.</div>';
+  }
+  if (avisosEstado === 'bloqueado'){
+    return '<div class="hint">Las notificaciones estan bloqueadas para esta app. '
+      + 'Se vuelven a permitir en Ajustes del telefono, en Mi Reventa, Notificaciones.</div>';
+  }
+  if (avisosEstado === 'trabajando'){
+    return '<div style="display:flex;align-items:center;gap:10px"><div class="spinner"></div>'
+      + '<span class="hint">Un momento...</span></div>';
+  }
+  if (avisosEstado === 'activo'){
+    return '<div class="hint" style="margin-bottom:10px">Este telefono quedo registrado para los avisos de apartados. '
+      + 'Cada telefono se activa por separado, asi que Vanessa tiene que hacerlo en el suyo.'
+      + (AVISOS_ENVIO_LISTO ? '' : ' Falta conectar el envio diario; mientras tanto puedes ver como se veria.')
+      + '</div>'
+      + '<button class="btn secondary" data-act="aviso-prueba">Mandar una de prueba</button>'
+      + '<button class="btn secondary" style="margin-top:10px" data-act="avisos-off">Apagar avisos en este telefono</button>';
+  }
+  return '<div class="hint" style="margin-bottom:10px">Un aviso en el telefono cuando un apartado este por vencer, '
+    + 'aunque no tengas la app abierta.</div>'
+    + '<button class="btn" data-act="avisos-on">Activar notificaciones</button>';
+}
 
 function descargarRespaldo(){
   var datos = JSON.stringify(state, null, 2);
@@ -1533,6 +1739,9 @@ function viewResumen(){
         ? '<div class="hint" style="margin-top:10px">' + t.apVencidos + (t.apVencidos === 1 ? ' apartado vencido' : ' apartados vencidos')
           + ': las prendas volvieron al inventario y ' + money(t.apPerdidos) + ' quedaron para el negocio.</div>'
         : '')
+
+    + '<div class="section-title">Avisos en el telefono</div>'
+    + bloqueAvisos()
 
     + '<div class="section-title">Como va el negocio</div>'
     + '<div class="hero-tile" style="border-left-color:var(--' + (t.gananciaNeta >= 0 ? 'success' : 'danger') + ')">'
@@ -2355,6 +2564,10 @@ document.addEventListener('click', function(e){
     return;
   }
 
+  if (act === 'avisos-on'){ activarAvisos(); return; }
+  if (act === 'avisos-off'){ desactivarAvisos(); return; }
+  if (act === 'aviso-prueba'){ avisoDePrueba(); return; }
+
   if (act === 'open-ap'){
     apOpen = true; apDetalle = null; apAccion = null;
     apFiltro = 'activo';
@@ -2698,6 +2911,14 @@ document.addEventListener('change', function(e){
     });
   }
 });
+
+try{
+  if (/[?&]ver=apartados\b/.test(location.search)){
+    abrirApartadosAlCargar = true;
+    // Se limpia la direccion para que recargar no vuelva a abrir el mismo panel.
+    if (history.replaceState) history.replaceState(null, '', location.pathname);
+  }
+}catch(e){}
 
 renderGate();
 })();

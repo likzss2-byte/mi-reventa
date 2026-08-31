@@ -1,3 +1,7 @@
 # Nunca subir datos del negocio: este repositorio es publico.
 *respaldo*.json
 mi-reventa-*.json
+
+# Nunca subir claves.
+*clave*
+*.pem

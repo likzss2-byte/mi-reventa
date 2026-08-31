@@ -26,8 +26,10 @@ extra por si hace falta recuperar algo o se quiere trabajar sin conexion.
 
 ## Configuracion de Firebase
 
-`index.html` incluye el `firebaseConfig` del proyecto (esos valores son publicos por
-diseno: la seguridad real la dan las reglas de Firestore, no el codigo del cliente).
+`index.html` incluye el `firebaseConfig` del proyecto y la clave publica VAPID de las
+notificaciones (esos valores son publicos por diseno: la seguridad real la dan las reglas
+de Firestore, no el codigo del cliente). La clave VAPID privada nunca va en el repositorio.
+`sw.js` es el service worker; solo muestra notificaciones, no cachea nada.
 Para replicar el proyecto: crear un proyecto en Firebase, activar Authentication con
 el proveedor de Google, crear una base de datos Firestore, y en Reglas restringir
 lectura/escritura a los correos autorizados.
@@ -43,6 +45,9 @@ lectura/escritura a los correos autorizados.
 - **Gastos**: lo que sale de la caja (publicidad, transporte, empaque).
 - **Resumen**: dinero disponible, estado de los apartados, ganancia neta, margen de ventas
   e inversion en ropa sin vender.
+- **Avisos**: notificaciones en el telefono cuando un apartado esta por vencer. En iPhone
+  solo funcionan si la app se abrio desde el icono de la pantalla de inicio (restriccion de
+  Apple). Cada telefono se activa por separado desde Resumen.
 
 La ropa comprada antes de empezar a usar la app se marca como "ya la tenia" para que su
 costo no descuente de la caja, ya que ese gasto ocurrio antes. El dinero solo entra al
