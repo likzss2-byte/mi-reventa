@@ -34,6 +34,26 @@ Para replicar el proyecto: crear un proyecto en Firebase, activar Authentication
 el proveedor de Google, crear una base de datos Firestore, y en Reglas restringir
 lectura/escritura a los correos autorizados.
 
+## Envio de los avisos
+
+Una pagina estatica no puede notificar nada con el telefono cerrado, asi que el aviso
+lo manda un proceso diario: `.github/workflows/avisos.yml` corre `avisos/enviar.js`,
+que lee los apartados en Firestore y manda la notificacion a los telefonos registrados.
+
+Avisa tres veces en la vida de un apartado y no mas: dos dias antes del plazo, el dia
+del plazo, y al dia siguiente para contar como quedo.
+
+Necesita dos secretos del repositorio (Settings -> Secrets and variables -> Actions):
+
+- `FIREBASE_CUENTA_SERVICIO`: el JSON de una cuenta de servicio de Firebase.
+- `VAPID_PRIVADA`: la clave privada de las notificaciones.
+
+Los registros de Actions son publicos porque el repositorio lo es, asi que el script
+solo imprime cuentas, nunca nombres de clientes, montos ni direcciones de suscripcion.
+
+`node avisos/prueba-local.js` recorre todo el camino con datos y claves de mentira,
+sin tocar produccion.
+
 ## Que registra
 
 - **Inventario**: prendas con foto, costo, precio de venta, proveedor y cantidades por talla.

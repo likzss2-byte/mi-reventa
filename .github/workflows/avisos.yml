@@ -1,0 +1,45 @@
+name: Avisos de apartados
+
+# Una vez al dia revisa los apartados y manda la notificacion a los telefonos
+# que la tengan activada. 15:00 UTC = 9:00 de la manana en el centro de Mexico.
+# GitHub puede retrasar el disparo unos minutos; para un aviso diario da igual.
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      prueba:
+        description: 'Mandar un aviso de prueba aunque no haya nada por vencer'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: avisos
+  cancel-in-progress: false
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: avisos/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: avisos
+        run: npm ci
+
+      - name: Mandar avisos
+        working-directory: avisos
+        env:
+          FIREBASE_CUENTA_SERVICIO: ${{ secrets.FIREBASE_CUENTA_SERVICIO }}
+          VAPID_PRIVADA: ${{ secrets.VAPID_PRIVADA }}
+          PRUEBA: ${{ inputs.prueba }}
+        run: node enviar.js

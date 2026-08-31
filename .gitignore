@@ -5,3 +5,6 @@ mi-reventa-*.json
 # Nunca subir claves.
 *clave*
 *.pem
+
+# Dependencias del envio de avisos.
+avisos/node_modules/

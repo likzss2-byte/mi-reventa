@@ -1,0 +1,10 @@
+{
+  "name": "mi-reventa-avisos",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Envio diario de las notificaciones de apartados.",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
