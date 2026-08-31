@@ -69,13 +69,13 @@ button,input,select{font-family:inherit;color:inherit}
 .content{flex:1;padding:16px 16px 104px}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0)}
 .tabbar-inner{display:flex;width:100%;max-width:640px}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:10px 2px 9px;cursor:pointer;color:var(--text-muted);font-size:10px;font-weight:600;letter-spacing:.01em}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:10px 1px 9px;cursor:pointer;color:var(--text-muted);font-size:9.5px;font-weight:600;letter-spacing:0}
 .tab-btn .ic{font-size:18px;line-height:1}
 .tab-btn[aria-selected="true"]{color:var(--accent)}
 .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:8px}
 h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;letter-spacing:.02em}
 .section-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin:0 0 12px}
-.hero-tile+.section-title,.stat-grid+.section-title,.bar-compare+.section-title,.cap-box+.section-title,.gasto-list+.section-title{margin-top:26px}
+.hero-tile+.section-title,.stat-grid+.section-title,.bar-compare+.section-title,.cap-box+.section-title,.gasto-list+.section-title,.hint+.section-title{margin-top:26px}
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .chip{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
@@ -126,7 +126,7 @@ h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;le
 .talla-row input{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;font-size:16px;min-width:0}
 .talla-row .t-name{flex:1}
 .talla-row .t-qty{width:78px;text-align:center;font-variant-numeric:tabular-nums}
-.talla-row .t-sold{font-size:11px;color:var(--text-muted);white-space:nowrap;width:66px}
+.talla-row .t-sold{font-size:10.5px;color:var(--text-muted);white-space:nowrap;width:76px}
 .talla-row .t-del{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
 .row-add{background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:8px 0;text-align:left;width:fit-content}
 .hero-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-left:5px solid var(--accent)}
@@ -194,6 +194,60 @@ h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;le
 .prov-stats{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-variant-numeric:tabular-nums}
 .prov-card .btn.secondary{background:var(--surface)}
 .prov-card .btn.secondary:active{background:var(--bg)}
+.card.pick{position:relative}
+.card.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.pick-mark{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:transparent}
+.card.pick[aria-pressed="true"] .pick-mark{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+.pick-bar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0));z-index:12;display:flex;justify-content:center;padding:0 16px;pointer-events:none}
+.pick-bar .btn{max-width:608px;pointer-events:auto;box-shadow:0 4px 18px rgba(0,0,0,.28)}
+.title-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.vi-row{display:flex;gap:11px;padding:12px 0;border-bottom:1px solid var(--border)}
+.vi-row:last-of-type{border-bottom:none}
+.vi-foto{width:52px;height:52px;border-radius:9px;object-fit:cover;background:var(--surface-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px}
+.vi-body{flex:1;min-width:0}
+.vi-name{font-weight:700;font-size:14px;margin-bottom:7px;line-height:1.25}
+.vi-fields{display:grid;grid-template-columns:1fr 62px 86px;gap:7px}
+.vi-fields label{display:block;min-width:0}
+.vi-fields select,.vi-fields input{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;font-size:15px;min-width:0;width:100%}
+.vi-fields select:focus,.vi-fields input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.vi-cap{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:3px}
+.vi-del{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;align-self:center}
+.tot-box{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;margin:15px 0}
+.tot-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13.5px;padding:4px 0;color:var(--text-muted)}
+.tot-row b{font-family:var(--font-mono);font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.tot-row.big{border-top:1px solid var(--border);margin-top:7px;padding-top:10px;font-weight:700;color:var(--text)}
+.tot-row.big b{font-size:17px}
+.tot-row.debe b{color:var(--warn)}
+.check-row.plain{background:var(--info-bg)}
+.ap-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:10px;width:100%;text-align:left;cursor:pointer;display:block}
+.ap-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ap-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.ap-cliente{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.ap-nums{display:flex;gap:18px;flex-wrap:wrap}
+.ap-num b{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px}
+.ap-num span{font-family:var(--font-mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.ap-num span.debe{color:var(--warn)}
+.ap-foot{font-size:11.5px;color:var(--text-muted);margin-top:10px}
+.ap-foot.urge{color:var(--danger);font-weight:700}
+.pill.activo{background:var(--info-bg);color:var(--info)}
+.pill.pronto{background:var(--warn-bg);color:var(--warn)}
+.pill.vencido{background:var(--danger-bg);color:var(--danger)}
+.pill.liquidado{background:var(--success-bg);color:var(--success)}
+.pill.apartada{background:var(--warn-bg);color:var(--warn)}
+.ap-item{display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.ap-item:last-child{border-bottom:none}
+.ap-item-body{flex:1;min-width:0}
+.ap-item-name{font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.ap-item-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.ap-item-sub{font-family:var(--font-mono);font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.abono-line{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:7px 0;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.abono-line:last-child{border-bottom:none}
+.abono-line b{font-family:var(--font-mono);color:var(--success)}
+.inline-form{display:flex;gap:8px;align-items:stretch}
+.inline-form input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 13px;font-size:16px}
+.inline-form input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.inline-form .btn{width:auto;flex-shrink:0}
+.bar-fill.abo{background:var(--accent)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(20,15,24,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .modal-backdrop.top{z-index:30}
 .modal-sheet{background:var(--surface);width:100%;max-width:640px;max-height:92dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom,0))}
@@ -237,12 +291,15 @@ h2{font-family:var(--font-display);font-weight:800;text-wrap:balance;margin:0;le
     <div class="tabbar-inner">
       <button class="tab-btn" data-tab="inventario"><span class="ic">&#128084;</span>Inventario</button>
       <button class="tab-btn" data-tab="agregar"><span class="ic">&#43;</span>Agregar</button>
-      <button class="tab-btn" data-tab="gastos"><span class="ic">&#129534;</span>Caja</button>
+      <button class="tab-btn" data-tab="vender"><span class="ic">&#128181;</span>Vender</button>
+      <button class="tab-btn" data-tab="gastos"><span class="ic">&#129534;</span>Gastos</button>
       <button class="tab-btn" data-tab="resumen"><span class="ic">&#128200;</span>Resumen</button>
     </div>
   </nav>
   <div id="modal-root"></div>
   <div id="prov-root"></div>
+  <div id="venta-root"></div>
+  <div id="ap-root"></div>
   <div id="hist-root"></div>
   <div id="pap-root"></div>
   <div id="gate-root"></div>
@@ -277,11 +334,13 @@ var docRef = doc(db, 'negocio', 'datos');        // formato viejo, se conserva d
 var configRef = doc(db, 'negocio', 'config');
 var colProductos = collection(db, 'productos');
 var colGastos = collection(db, 'gastos');
-var colIngresos = collection(db, 'ingresos');
+var colIngresos = collection(db, 'ingresos');   // ya no se usa: solo queda para limpiarla
 var colProveedores = collection(db, 'proveedores');
+var colApartados = collection(db, 'apartados');
 var histRef = collection(db, 'historial');
 var colPapelera = collection(db, 'papelera');
 
+var DIAS_APARTADO = 14;          // plazo para liquidar un apartado
 var MAX_VERSIONES = 20;
 var MAX_PAPELERA = 30;
 var LIMITE_DOC = 1048576;        // tope duro de Firestore por documento
@@ -297,13 +356,12 @@ var CLAVE_RESPALDO = 'mi_reventa_ultimo_respaldo';
 
 var CATEGORIAS = ['Publicidad', 'Transporte', 'Operarios', 'Empaque y envio', 'Alquiler', 'Otros'];
 
-var state = { capitalInicial: 0, products: [], gastos: [], ingresos: [], proveedores: [] };
+var state = { capitalInicial: 0, products: [], gastos: [], proveedores: [], apartados: [] };
 var tab = readTab();
 var filter = 'todos';
 var openId = null;
 var askDelete = false;
 var armedGasto = null;
-var movTipo = 'gasto';
 var provOpen = false;
 var armedProv = null;
 var drafts = [];
@@ -324,13 +382,27 @@ var papCargando = false;
 var papEntradas = [];
 var armedPap = null;
 
+// Venta desde la pestana Vender: se eligen prendas, se ajustan en el formulario y
+// se registran de una vez, como venta directa o como apartado.
+var seleccion = [];
+var ventaOpen = false;
+var ventaItems = [];
+var ventaValores = {};
+var ventaForm = { fecha: '', apartado: false, cliente: '', abono: '' };
+
+var apOpen = false;
+var apDetalle = null;
+var apFiltro = 'activo';
+var apAccion = null;
+var ingresosLimpiados = false;
+
 // Espejo de lo ultimo confirmado por el servidor. save() compara contra esto para
 // escribir solo lo que cambio, y para saber que se borro.
-var espejo = { config: null, productos: {}, gastos: {}, ingresos: {}, proveedores: {} };
+var espejo = { config: null, productos: {}, gastos: {}, proveedores: {}, apartados: {} };
 // datosListos solo se activa cuando las 5 fuentes cargaron: escribir con el estado
 // a medias borraria lo que todavia no llego.
 var fuentesCargadas = {};
-var FUENTES = ['config', 'productos', 'gastos', 'ingresos', 'proveedores'];
+var FUENTES = ['config', 'productos', 'gastos', 'proveedores', 'apartados'];
 var unsubs = [];
 var migrando = false;
 
@@ -339,6 +411,29 @@ function pad(n){ return n < 10 ? '0' + n : '' + n; }
 function today(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
 
 function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+
+function fechaMas(fechaISO, dias){
+  var p = String(fechaISO).split('-');
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  if (isNaN(d.getTime())) d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+
+// Dias que faltan para esa fecha: 0 es hoy, negativo ya paso.
+function diasHasta(fechaISO){
+  var p = String(fechaISO).split('-');
+  var f = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  if (isNaN(f.getTime())) return 0;
+  var h = new Date(); h.setHours(0, 0, 0, 0);
+  return Math.round((f.getTime() - h.getTime()) / 86400000);
+}
+
+function fechaCorta(fechaISO){
+  var p = String(fechaISO).split('-');
+  if (p.length !== 3) return String(fechaISO);
+  return Number(p[2]) + '/' + Number(p[1]);
+}
 function int(v, fallback){ var n = parseInt(v, 10); return (isNaN(n) || n < 0) ? fallback : n; }
 
 // Migra formatos viejos: prendas sueltas (estado en_venta/vendido) a variantes+ventas,
@@ -349,8 +444,8 @@ function migrate(raw){
     capitalInicial: num(s.capitalInicial),
     products: Array.isArray(s.products) ? s.products : [],
     gastos: Array.isArray(s.gastos) ? s.gastos : [],
-    ingresos: Array.isArray(s.ingresos) ? s.ingresos : [],
-    proveedores: Array.isArray(s.proveedores) ? s.proveedores : []
+    proveedores: Array.isArray(s.proveedores) ? s.proveedores : [],
+    apartados: Array.isArray(s.apartados) ? s.apartados : []
   };
   out.proveedores = out.proveedores.map(function(v){
     return { id: v.id || uid('pr'), nombre: v.nombre || '', contacto: v.contacto || '' };
@@ -404,7 +499,10 @@ function migrate(raw){
         varianteId: v.varianteId || q.variantes[0].id,
         cantidad: int(v.cantidad, 1),
         precioUnitario: num(v.precioUnitario),
-        fecha: v.fecha || q.fechaCompra
+        fecha: v.fecha || q.fechaCompra,
+        // Las ventas que salen de liquidar un apartado quedan atadas a el, para poder
+        // deshacerlas juntas y no dejar el apartado marcado como cobrado sin sus ventas.
+        apartadoId: v.apartadoId || null
       };
     });
     if (!q.proveedorId && q.dondeLoCompre.trim()){
@@ -421,27 +519,30 @@ function migrate(raw){
       fecha: g.fecha || today()
     };
   });
-  out.ingresos = out.ingresos.map(function(i){
+  out.apartados = out.apartados.map(function(a){
+    var fecha = a.fecha || today();
     return {
-      id: i.id || uid('i'),
-      concepto: i.concepto || '',
-      monto: num(i.monto),
-      fecha: i.fecha || today()
+      id: a.id || uid('ap'),
+      cliente: a.cliente || '',
+      fecha: fecha,
+      vence: a.vence || fechaMas(fecha, DIAS_APARTADO),
+      estado: (a.estado === 'liquidado' || a.estado === 'vencido') ? a.estado : 'activo',
+      liquidadoEn: a.liquidadoEn || '',
+      items: (Array.isArray(a.items) ? a.items : []).map(function(it){
+        return {
+          productoId: it.productoId || '',
+          varianteId: it.varianteId || '',
+          nombre: it.nombre || '',
+          talla: it.talla || '',
+          cantidad: int(it.cantidad, 1),
+          precioUnitario: num(it.precioUnitario)
+        };
+      }),
+      abonos: (Array.isArray(a.abonos) ? a.abonos : []).map(function(ab){
+        return { id: ab.id || uid('ab'), monto: num(ab.monto), fecha: ab.fecha || fecha };
+      })
     };
   });
-  return out;
-}
-
-// Gastos e ingresos juntos, del mas reciente al mas viejo, para el historial.
-function movimientos(){
-  var out = [];
-  state.gastos.forEach(function(g){
-    out.push({ tipo: 'gasto', id: g.id, concepto: g.concepto, monto: g.monto, categoria: g.categoria, fecha: g.fecha });
-  });
-  state.ingresos.forEach(function(i){
-    out.push({ tipo: 'ingreso', id: i.id, concepto: i.concepto, monto: i.monto, categoria: '', fecha: i.fecha });
-  });
-  out.sort(function(a, b){ return String(b.fecha).localeCompare(String(a.fecha)); });
   return out;
 }
 
@@ -454,7 +555,7 @@ function diasDesdeRespaldo(){
 }
 
 function hayDatos(){
-  return state.products.length || state.gastos.length || state.ingresos.length;
+  return state.products.length || state.gastos.length || state.apartados.length;
 }
 
 function proveedor(id){
@@ -539,14 +640,22 @@ function compradas(p){
 function vendidas(p){
   return p.ventas.reduce(function(a, s){ return a + s.cantidad; }, 0);
 }
-function disponibles(p){
+// Sin vender = lo que todavia es tuyo, apartado incluido (el apartado no es venta).
+// Disponible = lo que puedes ofrecerle a alguien mas hoy.
+function sinVender(p){
   return Math.max(0, compradas(p) - vendidas(p));
+}
+function disponibles(p){
+  return Math.max(0, compradas(p) - vendidas(p) - apartadas(p));
 }
 function vendidasDe(p, varianteId){
   return p.ventas.reduce(function(a, s){ return s.varianteId === varianteId ? a + s.cantidad : a; }, 0);
 }
+function comprometidasDe(p, varianteId){
+  return vendidasDe(p, varianteId) + apartadasDe(p, varianteId);
+}
 function stockDe(p, v){
-  return Math.max(0, v.cantidad - vendidasDe(p, v.id));
+  return Math.max(0, v.cantidad - comprometidasDe(p, v.id));
 }
 function cobradoDe(p){
   return p.ventas.reduce(function(a, s){ return a + s.precioUnitario * s.cantidad; }, 0);
@@ -554,6 +663,55 @@ function cobradoDe(p){
 function gananciaDe(p){
   return p.ventas.reduce(function(a, s){ return a + (s.precioUnitario - p.costo) * s.cantidad; }, 0);
 }
+// ---------- apartados ----------
+function apartado(id){
+  for (var i = 0; i < state.apartados.length; i++){
+    if (state.apartados[i].id === id) return state.apartados[i];
+  }
+  return null;
+}
+function totalApartado(a){
+  return a.items.reduce(function(x, it){ return x + it.precioUnitario * it.cantidad; }, 0);
+}
+function abonadoDe(a){
+  return a.abonos.reduce(function(x, ab){ return x + ab.monto; }, 0);
+}
+function restanteDe(a){
+  return Math.max(0, totalApartado(a) - abonadoDe(a));
+}
+function unidadesDe(a){
+  return a.items.reduce(function(x, it){ return x + it.cantidad; }, 0);
+}
+// El vencimiento se deduce de la fecha, no de un campo que alguien tenga que actualizar:
+// asi los dos telefonos ven lo mismo aunque nadie abra la app el dia del plazo.
+function estadoApartado(a){
+  if (a.estado === 'liquidado' || a.estado === 'vencido') return a.estado;
+  return diasHasta(a.vence) < 0 ? 'vencido' : 'activo';
+}
+function etiquetaEstado(est){
+  return est === 'activo' ? 'Activo' : est === 'vencido' ? 'Vencido' : 'Liquidado';
+}
+// Unidades reservadas en apartados vigentes. Las de uno vencido ya no cuentan:
+// volvieron al inventario. Las de uno liquidado tampoco: son ventas.
+function apartadasDe(p, varianteId){
+  var t = 0;
+  state.apartados.forEach(function(a){
+    if (estadoApartado(a) !== 'activo') return;
+    a.items.forEach(function(it){
+      if (it.productoId === p.id && it.varianteId === varianteId) t += it.cantidad;
+    });
+  });
+  return t;
+}
+function apartadas(p){
+  var t = 0;
+  state.apartados.forEach(function(a){
+    if (estadoApartado(a) !== 'activo') return;
+    a.items.forEach(function(it){ if (it.productoId === p.id) t += it.cantidad; });
+  });
+  return t;
+}
+
 function etiquetaVariante(p, varianteId){
   for (var i = 0; i < p.variantes.length; i++){
     if (p.variantes[i].id === varianteId) return p.variantes[i].talla || 'sin talla';
@@ -561,16 +719,17 @@ function etiquetaVariante(p, varianteId){
   return 'sin talla';
 }
 
-// Dinero del negocio = capital inicial - compras nuevas - gastos + ingresos + cobrado.
+// Dinero del negocio = capital inicial - compras nuevas - gastos + cobrado en ventas
+// + todo lo abonado en apartados (ese dinero ya esta en la mano, se liquide o no).
 // La ropa marcada como stock inicial ya estaba pagada antes de empezar: no toca la caja.
-// Los ingresos sueltos entran a la caja pero no cuentan como ganancia: normalmente es
-// plata propia que se mete al negocio, y sumarla inflaria el beneficio falsamente.
 function totals(){
   var t = {
     caja: 0, comprasNuevas: 0, valorStockInicial: 0, cobrado: 0,
-    gastos: 0, ingresos: 0, gananciaBruta: 0, gananciaNeta: 0,
-    invertidoEnStock: 0, unidadesStock: 0, unidadesVendidas: 0,
-    prendasIniciales: 0
+    gastos: 0, gananciaBruta: 0, gananciaNeta: 0,
+    invertidoEnStock: 0, unidadesStock: 0, unidadesVendidas: 0, unidadesApartadas: 0,
+    prendasIniciales: 0,
+    apActivos: 0, apAbonado: 0, apPorCobrar: 0, apValor: 0,
+    apVencidos: 0, apPerdidos: 0, apPorVencer: 0, apLiquidados: 0
   };
   state.products.forEach(function(p){
     var costoTotal = p.costo * compradas(p);
@@ -582,14 +741,32 @@ function totals(){
     }
     t.cobrado += cobradoDe(p);
     t.gananciaBruta += gananciaDe(p);
-    t.invertidoEnStock += p.costo * disponibles(p);
+    t.invertidoEnStock += p.costo * sinVender(p);
     t.unidadesStock += disponibles(p);
+    t.unidadesApartadas += apartadas(p);
     t.unidadesVendidas += vendidas(p);
   });
   t.gastos = state.gastos.reduce(function(a, g){ return a + g.monto; }, 0);
-  t.ingresos = state.ingresos.reduce(function(a, i){ return a + i.monto; }, 0);
-  t.caja = state.capitalInicial - t.comprasNuevas - t.gastos + t.ingresos + t.cobrado;
-  t.gananciaNeta = t.gananciaBruta - t.gastos;
+  state.apartados.forEach(function(a){
+    var est = estadoApartado(a);
+    if (est === 'liquidado'){ t.apLiquidados++; return; }   // ya cuenta como venta cobrada
+    var ab = abonadoDe(a);
+    if (est === 'vencido'){
+      t.apVencidos++;
+      t.apPerdidos += ab;
+      return;
+    }
+    t.apActivos++;
+    t.apAbonado += ab;
+    t.apPorCobrar += restanteDe(a);
+    t.apValor += totalApartado(a);
+    if (diasHasta(a.vence) <= 3) t.apPorVencer++;
+  });
+  t.caja = state.capitalInicial - t.comprasNuevas - t.gastos + t.cobrado + t.apAbonado + t.apPerdidos;
+  // Lo abonado en un apartado vencido es ganancia limpia: la prenda volvio al inventario
+  // y el dinero se queda. Lo abonado en uno vigente todavia no es ganancia: la venta
+  // no esta cerrada y la prenda sigue siendo tuya.
+  t.gananciaNeta = t.gananciaBruta + t.apPerdidos - t.gastos;
   return t;
 }
 
@@ -646,8 +823,8 @@ function save(){
 
   sincronizarColeccion(state.products, colProductos, espejo.productos);
   sincronizarColeccion(state.gastos, colGastos, espejo.gastos);
-  sincronizarColeccion(state.ingresos, colIngresos, espejo.ingresos);
   sincronizarColeccion(state.proveedores, colProveedores, espejo.proveedores);
+  sincronizarColeccion(state.apartados, colApartados, espejo.apartados);
 
   archivarVersion();
 }
@@ -894,6 +1071,7 @@ function marcarCargada(nombre){
   gateEstado = null;
   renderGate();
   migrarSiHaceFalta();
+  limpiarIngresosViejos();
   return true;
 }
 
@@ -942,8 +1120,8 @@ function suscribirDatos(){
 
   unsubs.push(suscribirColeccion(colProductos, 'productos', 'products'));
   unsubs.push(suscribirColeccion(colGastos, 'gastos', 'gastos'));
-  unsubs.push(suscribirColeccion(colIngresos, 'ingresos', 'ingresos'));
   unsubs.push(suscribirColeccion(colProveedores, 'proveedores', 'proveedores'));
+  unsubs.push(suscribirColeccion(colApartados, 'apartados', 'apartados'));
 
   unsubscribeDatos = function(){
     unsubs.forEach(function(u){ try{ u(); }catch(e){} });
@@ -954,16 +1132,25 @@ function suscribirDatos(){
 // Pasa el formato viejo (todo el negocio en negocio/datos) al nuevo (un documento por
 // entidad). Solo corre si el formato nuevo esta vacio, asi que es seguro repetirla.
 // El documento viejo NO se borra: queda como respaldo.
+// Los ingresos sueltos se quitaron del negocio: el dinero solo entra vendiendo o
+// cobrando apartados. Se borran los que quedaron de la version anterior.
+function limpiarIngresosViejos(){
+  if (ingresosLimpiados) return;
+  ingresosLimpiados = true;
+  getDocs(colIngresos).then(function(snap){
+    snap.docs.forEach(function(d){ deleteDoc(d.ref).catch(function(){}); });
+  }).catch(function(){});
+}
+
 function migrarSiHaceFalta(){
   var vacio = !state.products.length && !state.gastos.length
-    && !state.ingresos.length && !state.proveedores.length;
+    && !state.proveedores.length && !state.apartados.length;
   if (!vacio) return;
 
   getDoc(docRef).then(function(snap){
     if (!snap.exists()) return;
     var viejo = migrate(snap.data());
-    var total = viejo.products.length + viejo.gastos.length
-      + viejo.ingresos.length + viejo.proveedores.length;
+    var total = viejo.products.length + viejo.gastos.length + viejo.proveedores.length;
     if (!total) return;
 
     migrando = true;
@@ -973,7 +1160,6 @@ function migrarSiHaceFalta(){
     var tareas = [];
     viejo.products.forEach(function(p){ tareas.push(setDoc(doc(colProductos, p.id), p)); });
     viejo.gastos.forEach(function(g){ tareas.push(setDoc(doc(colGastos, g.id), g)); });
-    viejo.ingresos.forEach(function(i){ tareas.push(setDoc(doc(colIngresos, i.id), i)); });
     viejo.proveedores.forEach(function(v){ tareas.push(setDoc(doc(colProveedores, v.id), v)); });
     tareas.push(setDoc(configRef, { capitalInicial: viejo.capitalInicial }));
 
@@ -1092,17 +1278,21 @@ function stripHTML(fotos, act){
   }).join('');
 }
 
-function tallaRowHTML(v, soldCount){
+// La cantidad comprada nunca puede bajar de lo ya vendido ni de lo apartado:
+// esas unidades estan comprometidas.
+function tallaRowHTML(v, vend, apart){
   var vid = v ? esc(v.id) : '';
   var talla = v ? esc(v.talla) : '';
   var cant = v ? v.cantidad : 1;
-  var min = soldCount || 0;
-  var soldLabel = soldCount ? soldCount + ' vendida' + (soldCount === 1 ? '' : 's') : '';
-  var delBtn = soldCount ? '' : '<button type="button" class="t-del" data-act="del-talla" aria-label="Quitar talla">&times;</button>';
+  var comprometidas = (vend || 0) + (apart || 0);
+  var partes = [];
+  if (vend) partes.push(vend + ' vend.');
+  if (apart) partes.push(apart + ' apart.');
+  var delBtn = comprometidas ? '' : '<button type="button" class="t-del" data-act="del-talla" aria-label="Quitar talla">&times;</button>';
   return '<div class="talla-row" data-vid="' + vid + '">'
     + '<input class="t-name" type="text" placeholder="Talla (opcional)" value="' + talla + '">'
-    + '<input class="t-qty" type="number" inputmode="numeric" step="1" min="' + Math.max(1, min) + '" value="' + cant + '">'
-    + (soldLabel ? '<span class="t-sold">' + soldLabel + '</span>' : '')
+    + '<input class="t-qty" type="number" inputmode="numeric" step="1" min="' + Math.max(1, comprometidas) + '" value="' + cant + '">'
+    + (partes.length ? '<span class="t-sold">' + partes.join(' ') + '</span>' : '')
     + delBtn
     + '</div>';
 }
@@ -1128,13 +1318,14 @@ function viewInventario(){
       + '<div style="margin-top:20px"><button class="btn inline" data-act="tab" data-value="agregar">Agregar prenda</button></div></div>';
   }
 
-  var chips = [['todos','Todos'],['stock','Con stock'],['agotado','Agotados']].map(function(c){
+  var chips = [['todos','Todos'],['stock','Disponibles'],['apartada','Apartadas'],['agotado','Agotados']].map(function(c){
     return '<button class="chip" data-act="filter" data-value="' + c[0] + '" aria-pressed="' + (filter === c[0]) + '">' + c[1] + '</button>';
   }).join('');
 
   var list = state.products.filter(function(p){
     if (filter === 'stock') return disponibles(p) > 0;
-    if (filter === 'agotado') return disponibles(p) === 0;
+    if (filter === 'apartada') return apartadas(p) > 0;
+    if (filter === 'agotado') return disponibles(p) === 0 && apartadas(p) === 0;
     return true;
   });
 
@@ -1145,10 +1336,16 @@ function viewInventario(){
   var cards = list.map(function(p){
     var photo = p.fotos.length ? '<img src="' + esc(p.fotos[0]) + '" alt="">' : '&#128086;';
     var libres = disponibles(p);
+    var reservadas = apartadas(p);
     var vend = vendidas(p);
     var pill = libres > 0
       ? '<span class="pill stock">' + libres + ' en stock</span>'
-      : '<span class="pill agotado">Agotado</span>';
+      : reservadas > 0
+        ? '<span class="pill apartada">Apartado</span>'
+        : '<span class="pill agotado">Agotado</span>';
+    if (libres > 0 && reservadas > 0){
+      pill += '<span class="pill apartada">' + reservadas + ' apartada' + (reservadas === 1 ? '' : 's') + '</span>';
+    }
     var prov = nombreProveedor(p);
     var meta = (prov ? esc(prov) + ' &middot; ' : '') + 'Costo ' + money(p.costo);
     if (vend > 0){
@@ -1179,7 +1376,7 @@ function viewAgregar(){
     + '</div>'
     + checkInicialHTML('f-inicial', false)
     + '<div class="field"><label>Tallas y cantidades</label>'
-    + '<div class="talla-rows" id="f-tallas">' + tallaRowHTML(null, 0) + '</div>'
+    + '<div class="talla-rows" id="f-tallas">' + tallaRowHTML(null, 0, 0) + '</div>'
     + '<button type="button" class="row-add" data-act="add-talla" data-value="f-tallas">+ Agregar talla</button>'
     + '<div class="hint">Si la prenda es unica, dejala en 1 y sin talla.</div></div>'
     + '<div class="field"><label>Fotos</label>'
@@ -1189,54 +1386,93 @@ function viewAgregar(){
     + '</form>';
 }
 
+// Pantalla para vender: solo foto, nombre y precio. Se tocan las prendas que se
+// llevan y el detalle (talla, cantidad, precio, apartado) se ajusta en el formulario.
+function viewVender(){
+  var libres = state.products.filter(function(p){ return disponibles(p) > 0; });
+
+  if (!libres.length){
+    var hayAlgo = state.products.length > 0;
+    return '<div class="empty"><span class="ic">&#128717;</span>'
+      + (hayAlgo
+          ? 'No hay prendas disponibles.<br>Todo esta vendido o apartado.'
+          : 'Todavia no cargaste ninguna prenda.<br>Agrega la primera para poder venderla.')
+      + '<div style="margin-top:20px"><button class="btn inline" data-act="tab" data-value="'
+      + (hayAlgo ? 'inventario' : 'agregar') + '">'
+      + (hayAlgo ? 'Ver inventario' : 'Agregar prenda') + '</button></div></div>';
+  }
+
+  var cards = libres.map(function(p){
+    var elegida = seleccion.indexOf(p.id) >= 0;
+    var photo = p.fotos.length ? '<img src="' + esc(p.fotos[0]) + '" alt="">' : '&#128086;';
+    return '<button class="card pick" data-act="pick" data-value="' + esc(p.id) + '" aria-pressed="' + elegida + '">'
+      + '<div class="card-photo">' + photo + '</div>'
+      + '<span class="pick-mark">&#10003;</span>'
+      + '<div class="card-body"><div class="card-name">' + esc(p.nombre) + '</div>'
+      + '<div class="card-prices"><span class="card-price">' + money(p.precioVenta) + '</span>'
+      + '<span class="pill stock">' + disponibles(p) + ' disp.</span></div></div></button>';
+  }).join('');
+
+  return '<div class="title-row"><div class="section-title">Elige las prendas</div>'
+    + (seleccion.length ? '<button class="linkbtn" data-act="limpiar-sel">Limpiar</button>' : '')
+    + '</div>'
+    + '<div class="grid">' + cards + '</div>'
+    + '<div style="height:56px"></div>'
+    + (seleccion.length
+        ? '<div class="pick-bar"><button class="btn" data-act="abrir-venta">Venta &middot; '
+          + seleccion.length + ' prenda' + (seleccion.length === 1 ? '' : 's') + '</button></div>'
+        : '');
+}
+
 function viewGastos(){
   var t = totals();
-  var lista = movimientos();
+  var lista = state.gastos.slice().sort(function(a, b){ return String(b.fecha).localeCompare(String(a.fecha)); });
+  var mes = today().slice(0, 7);
+  var gastoMes = state.gastos.reduce(function(a, g){
+    return String(g.fecha).slice(0, 7) === mes ? a + g.monto : a;
+  }, 0);
 
   var filas = lista.length
     ? '<div class="gasto-list">' + lista.map(function(m){
         var armed = armedGasto === m.id;
-        var esIngreso = m.tipo === 'ingreso';
-        var act = armed ? (esIngreso ? 'del-ingreso' : 'del-gasto') : 'arm-gasto';
         return '<div class="gasto-row"><div class="gasto-info">'
           + '<div class="gasto-name">' + esc(m.concepto) + '</div>'
-          + '<div class="gasto-meta"><span class="gasto-cat">' + esc(esIngreso ? 'Ingreso' : m.categoria) + '</span><span>' + esc(m.fecha) + '</span></div></div>'
-          + '<div class="gasto-right"><span class="gasto-monto' + (esIngreso ? ' entra' : '') + '">'
-          + (esIngreso ? '+' : '&minus;') + money(m.monto).replace('$', '$') + '</span>'
-          + '<button class="gasto-del' + (armed ? ' armed' : '') + '" data-act="' + act + '" data-value="' + esc(m.id) + '">'
+          + '<div class="gasto-meta"><span class="gasto-cat">' + esc(m.categoria) + '</span><span>' + esc(m.fecha) + '</span></div></div>'
+          + '<div class="gasto-right"><span class="gasto-monto">&minus;' + money(m.monto) + '</span>'
+          + '<button class="gasto-del' + (armed ? ' armed' : '') + '" data-act="' + (armed ? 'del-gasto' : 'arm-gasto') + '" data-value="' + esc(m.id) + '">'
           + (armed ? 'Borrar' : '&times;') + '</button></div></div>';
       }).join('') + '</div>'
-    : '<div class="empty"><span class="ic">&#129534;</span>Sin movimientos registrados.<br>Aca van los gastos del negocio y el dinero que metas a la caja.</div>';
+    : '<div class="empty"><span class="ic">&#129534;</span>Sin gastos registrados.<br>Aca va lo que sale de la caja: publicidad, transporte, empaque.</div>';
 
-  var esIngreso = movTipo === 'ingreso';
-
-  return '<div class="section-title">Movimientos de caja</div>'
+  return '<div class="section-title">Gastos del negocio</div>'
     + '<div class="stat-grid">'
     + '<div class="stat-tile"><div class="stat-label">Total gastado</div><div class="stat-value warn">' + money(t.gastos) + '</div></div>'
-    + '<div class="stat-tile"><div class="stat-label">Ingresos a caja</div><div class="stat-value success">' + money(t.ingresos) + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Este mes</div><div class="stat-value warn">' + money(gastoMes) + '</div></div>'
     + '</div>'
-    + '<div class="section-title" style="margin-top:26px">Anotar un movimiento</div>'
-    + '<div class="filters">'
-    + '<button type="button" class="chip" data-act="mov-tipo" data-value="gasto" aria-pressed="' + (!esIngreso) + '">Gasto</button>'
-    + '<button type="button" class="chip" data-act="mov-tipo" data-value="ingreso" aria-pressed="' + esIngreso + '">Ingreso</button>'
-    + '</div>'
+    + '<div class="section-title" style="margin-top:26px">Anotar un gasto</div>'
     + '<form id="gasto-form">'
     + '<div class="field"><label for="g-concepto">Concepto</label>'
-    + '<input id="g-concepto" type="text" placeholder="' + (esIngreso ? 'Puse dinero propio' : 'Anuncio en Instagram') + '" required></div>'
+    + '<input id="g-concepto" type="text" placeholder="Anuncio en Instagram" required></div>'
     + '<div class="row2">'
     + '<div class="field"><label for="g-monto">Monto</label><input id="g-monto" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required></div>'
     + '<div class="field"><label for="g-fecha">Fecha</label><input id="g-fecha" type="date" value="' + esc(today()) + '"></div>'
     + '</div>'
-    + '<div class="field" id="g-cat-wrap"' + (esIngreso ? ' hidden' : '') + '><label for="g-categoria">Categoria</label>'
+    + '<div class="field"><label for="g-categoria">Categoria</label>'
     + '<select id="g-categoria">' + categoriaOptions('Publicidad') + '</select></div>'
-    + (esIngreso ? '<div class="hint" style="margin-bottom:15px">Suma a la caja pero no cuenta como ganancia, porque no viene de vender una prenda.</div>' : '')
-    + '<button type="submit" class="btn">' + (esIngreso ? 'Ingresar a caja' : 'Anotar gasto') + '</button></form>'
+    + '<button type="submit" class="btn">Anotar gasto</button></form>'
+    + '<div class="hint" style="margin-top:12px">El dinero solo entra vendiendo prendas o cobrando apartados. Si necesitas corregir el punto de partida, cambia "Dinero con el que empezaste" en Resumen.</div>'
     + '<div class="section-title" style="margin-top:26px">Historial</div>' + filas;
 }
 
 function viewResumen(){
   var t = totals();
-  var max = Math.max(t.comprasNuevas, t.cobrado, t.gastos, 1);
+  var abonos = t.apAbonado + t.apPerdidos;
+  var max = Math.max(t.comprasNuevas, t.cobrado, t.gastos, abonos, 1);
+  function barra(nombre, clase, valor){
+    return '<div class="bar-row"><span class="bar-label">' + nombre + '</span>'
+      + '<div class="bar-track"><div class="bar-fill ' + clase + '" style="width:' + (valor / max * 100).toFixed(1) + '%"></div></div>'
+      + '<span class="bar-value">' + money(valor) + '</span></div>';
+  }
 
   var ventas = [];
   state.products.forEach(function(p){
@@ -1267,31 +1503,63 @@ function viewResumen(){
       + t.prendasIniciales + ' prenda' + (t.prendasIniciales === 1 ? '' : 's') + ').</div>'
     : '';
 
+  var avisoVence = t.apPorVencer > 0
+    ? '<div class="check-row" style="cursor:default"><span style="font-size:19px">&#9203;</span>'
+      + '<span><span class="ct">' + t.apPorVencer + ' apartado' + (t.apPorVencer === 1 ? ' por vencer' : 's por vencer') + '</span>'
+      + '<span class="cs">Se cumple el plazo en 3 dias o menos. Si no se liquida, la prenda vuelve al inventario y lo abonado queda para el negocio.</span></span></div>'
+    : '';
+
   return '<div class="section-title">Dinero del negocio</div>'
     + '<div class="hero-tile">'
     + '<div class="hero-label">En caja ahora</div>'
     + '<div class="hero-value' + (t.caja < 0 ? ' neg' : '') + '">' + money(t.caja) + '</div>'
     + '<div class="hero-sub">' + money(state.capitalInicial) + ' iniciales &minus; ' + money(t.comprasNuevas)
-    + ' en compras &minus; ' + money(t.gastos) + ' en gastos &plus; ' + money(t.cobrado) + ' cobrados'
-    + (t.ingresos > 0 ? ' &plus; ' + money(t.ingresos) + ' ingresados' : '') + '</div>'
+    + ' en compras &minus; ' + money(t.gastos) + ' en gastos &plus; ' + money(t.cobrado) + ' cobrados en ventas'
+    + (abonos > 0 ? ' &plus; ' + money(abonos) + ' abonados en apartados' : '') + '</div>'
     + nota + '</div>'
     + '<div class="cap-box"><label for="f-capital">Dinero con el que empezaste</label>'
     + '<input id="f-capital" type="number" inputmode="decimal" step="0.01" value="' + esc(state.capitalInicial) + '"></div>'
-    + '<div class="section-title">Como va el negocio</div>'
+
+    + '<div class="section-title">Apartados</div>'
+    + avisoVence
     + '<div class="stat-grid">'
-    + '<div class="stat-tile"><div class="stat-label">Ganancia neta</div><div class="stat-value ' + (t.gananciaNeta >= 0 ? 'success' : 'danger') + '">' + money(t.gananciaNeta) + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Apartados vigentes</div><div class="stat-value">' + t.apActivos + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Prendas apartadas</div><div class="stat-value">' + t.unidadesApartadas + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Abonado (ya en caja)</div><div class="stat-value success">' + money(t.apAbonado) + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Falta por cobrar</div><div class="stat-value warn">' + money(t.apPorCobrar) + '</div></div>'
+    + '</div>'
+    + '<button class="btn" style="margin-top:12px" data-act="open-ap">Apartados</button>'
+    + (t.apVencidos > 0
+        ? '<div class="hint" style="margin-top:10px">' + t.apVencidos + (t.apVencidos === 1 ? ' apartado vencido' : ' apartados vencidos')
+          + ': las prendas volvieron al inventario y ' + money(t.apPerdidos) + ' quedaron para el negocio.</div>'
+        : '')
+
+    + '<div class="section-title">Como va el negocio</div>'
+    + '<div class="hero-tile" style="border-left-color:var(--' + (t.gananciaNeta >= 0 ? 'success' : 'danger') + ')">'
+    + '<div class="hero-label">Ganancia neta</div>'
+    + '<div class="hero-value' + (t.gananciaNeta < 0 ? ' neg' : '') + '">' + money(t.gananciaNeta) + '</div>'
+    + '<div class="hero-sub">' + money(t.gananciaBruta) + ' de margen en ventas'
+    + (t.apPerdidos > 0 ? ' &plus; ' + money(t.apPerdidos) + ' de abonos vencidos' : '')
+    + ' &minus; ' + money(t.gastos) + ' de gastos</div>'
+    + (t.apPorCobrar > 0
+        ? '<div class="hero-note">Sin contar ' + money(t.apPorCobrar) + ' que faltan por cobrar de apartados vigentes.</div>'
+        : '')
+    + '</div>'
+    + '<div class="stat-grid" style="margin-top:12px">'
     + '<div class="stat-tile"><div class="stat-label">Margen de ventas</div><div class="stat-value ' + (t.gananciaBruta >= 0 ? 'success' : 'danger') + '">' + money(t.gananciaBruta) + '</div></div>'
     + '<div class="stat-tile"><div class="stat-label">Gastos</div><div class="stat-value warn">' + money(t.gastos) + '</div></div>'
-    + '<div class="stat-tile"><div class="stat-label">Invertido en stock</div><div class="stat-value info">' + money(t.invertidoEnStock) + '</div></div>'
-    + '<div class="stat-tile"><div class="stat-label">Unidades en stock</div><div class="stat-value">' + t.unidadesStock + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Invertido en ropa sin vender</div><div class="stat-value info">' + money(t.invertidoEnStock) + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Valor de lo apartado</div><div class="stat-value info">' + money(t.apValor) + '</div></div>'
+    + '<div class="stat-tile"><div class="stat-label">Unidades disponibles</div><div class="stat-value">' + t.unidadesStock + '</div></div>'
     + '<div class="stat-tile"><div class="stat-label">Unidades vendidas</div><div class="stat-value">' + t.unidadesVendidas + '</div></div>'
     + '</div>'
-    + '<div class="hint" style="margin-top:10px">Margen de ventas es lo que ganaste sobre el costo de lo vendido. La ganancia neta le resta los gastos.</div>'
+    + '<div class="hint" style="margin-top:10px">El margen de ventas es lo que ganaste sobre el costo de lo que ya vendiste. Un apartado suma margen recien cuando se liquida; si se vence, lo abonado pasa entero a la ganancia porque la prenda vuelve al inventario.</div>'
     + '<div class="section-title">Entradas y salidas</div>'
     + '<div class="bar-compare">'
-    + '<div class="bar-row"><span class="bar-label">Compras</span><div class="bar-track"><div class="bar-fill cost" style="width:' + (t.comprasNuevas / max * 100).toFixed(1) + '%"></div></div><span class="bar-value">' + money(t.comprasNuevas) + '</span></div>'
-    + '<div class="bar-row"><span class="bar-label">Gastos</span><div class="bar-track"><div class="bar-fill exp" style="width:' + (t.gastos / max * 100).toFixed(1) + '%"></div></div><span class="bar-value">' + money(t.gastos) + '</span></div>'
-    + '<div class="bar-row"><span class="bar-label">Cobrado</span><div class="bar-track"><div class="bar-fill rev" style="width:' + (t.cobrado / max * 100).toFixed(1) + '%"></div></div><span class="bar-value">' + money(t.cobrado) + '</span></div>'
+    + barra('Compras', 'cost', t.comprasNuevas)
+    + barra('Gastos', 'exp', t.gastos)
+    + barra('Cobrado', 'rev', t.cobrado)
+    + barra('Abonos', 'abo', abonos)
     + '</div>'
     + '<div class="section-title">Ultimas ventas</div>'
     + '<div>' + ventasHtml + '</div>'
@@ -1344,7 +1612,7 @@ function renderModal(){
   var p = find(openId);
   if (!p){ openId = null; root.innerHTML = ''; return; }
 
-  var rows = p.variantes.map(function(v){ return tallaRowHTML(v, vendidasDe(p, v.id)); }).join('');
+  var rows = p.variantes.map(function(v){ return tallaRowHTML(v, vendidasDe(p, v.id), apartadasDe(p, v.id)); }).join('');
 
   var conStock = p.variantes.filter(function(v){ return stockDe(p, v) > 0; });
   var sellBlock;
@@ -1362,7 +1630,14 @@ function renderModal(){
       + '<div class="field"><label for="s-fecha">Fecha</label><input id="s-fecha" type="date" value="' + esc(today()) + '"></div>'
       + '<button class="btn" data-act="sell">Registrar venta</button></div>';
   } else {
-    sellBlock = '<div class="hint">No queda stock de esta prenda. Sumale cantidad arriba si volviste a comprarla.</div>';
+    sellBlock = '<div class="hint">' + (apartadas(p) > 0
+      ? 'Todas las unidades libres estan apartadas. Se liberan al liquidar o al vencerse el apartado.'
+      : 'No queda stock de esta prenda. Sumale cantidad arriba si volviste a comprarla.') + '</div>';
+  }
+  if (conStock.length && apartadas(p) > 0){
+    sellBlock += '<div class="hint" style="margin-top:8px">' + apartadas(p)
+      + ' unidad' + (apartadas(p) === 1 ? '' : 'es') + ' apartada' + (apartadas(p) === 1 ? '' : 's')
+      + ': no cuentan como disponibles.</div>';
   }
 
   var ventasHtml = p.ventas.length
@@ -1381,6 +1656,10 @@ function renderModal(){
     : nVentas === 1
       ? 'La prenda y su venta salen del inventario y van a la papelera, donde puedes recuperarlas.'
       : 'La prenda y sus ' + nVentas + ' ventas salen del inventario y van a la papelera, donde puedes recuperarlas.';
+  if (apartadas(p) > 0){
+    avisoBorrado += ' Ojo: tiene ' + apartadas(p) + ' unidad' + (apartadas(p) === 1 ? '' : 'es')
+      + ' en apartados vigentes, que van a quedar sin prenda.';
+  }
   var deleteBlock = askDelete
     ? '<div class="confirm-box"><div class="confirm-text">' + avisoBorrado + '</div>'
       + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-delete">Cancelar</button>'
@@ -1453,6 +1732,313 @@ function renderProveedores(){
     + '</div></div>';
 }
 
+// ---------- venta / apartado ----------
+// Los valores tipeados se leen del DOM mientras el formulario existe; si todavia no
+// se dibujo (primer render) se usan los guardados o el precio de lista de la prenda.
+function leerFilasVenta(){
+  var filas = document.querySelectorAll('#venta-root .vi-row');
+  if (!filas.length) return null;
+  var out = [];
+  for (var i = 0; i < filas.length; i++){
+    out.push({
+      productoId: filas[i].getAttribute('data-pid'),
+      varianteId: filas[i].querySelector('.vi-talla').value,
+      cantidad: int(filas[i].querySelector('.vi-cant').value, 1),
+      precioUnitario: num(filas[i].querySelector('.vi-precio').value)
+    });
+  }
+  return out;
+}
+
+function itemsVenta(){
+  var dom = leerFilasVenta();
+  if (dom) return dom;
+  var out = [];
+  ventaItems.forEach(function(pid){
+    var p = find(pid);
+    if (!p) return;
+    var conStock = p.variantes.filter(function(x){ return stockDe(p, x) > 0; });
+    if (!conStock.length) return;
+    var v = ventaValores[pid] || {};
+    out.push({
+      productoId: pid,
+      varianteId: v.vid || conStock[0].id,
+      cantidad: v.cant || 1,
+      precioUnitario: (v.precio != null) ? v.precio : p.precioVenta
+    });
+  });
+  return out;
+}
+
+function cosecharVenta(){
+  var filas = document.querySelectorAll('#venta-root .vi-row');
+  for (var i = 0; i < filas.length; i++){
+    ventaValores[filas[i].getAttribute('data-pid')] = {
+      vid: filas[i].querySelector('.vi-talla').value,
+      cant: int(filas[i].querySelector('.vi-cant').value, 1),
+      precio: num(filas[i].querySelector('.vi-precio').value)
+    };
+  }
+  var f = document.getElementById('v-fecha');
+  if (f) ventaForm.fecha = f.value || today();
+  var c = document.getElementById('v-cliente');
+  if (c) ventaForm.cliente = c.value;
+  var ab = document.getElementById('v-abono');
+  if (ab) ventaForm.abono = ab.value;
+  var chk = document.getElementById('v-apartado');
+  if (chk) ventaForm.apartado = chk.checked;
+}
+
+function totalesVentaHTML(){
+  var items = itemsVenta();
+  var total = items.reduce(function(a, it){ return a + it.precioUnitario * it.cantidad; }, 0);
+  var uds = items.reduce(function(a, it){ return a + it.cantidad; }, 0);
+  var html = '<div class="tot-row"><span>Unidades</span><b>' + uds + '</b></div>';
+  if (ventaForm.apartado){
+    var campo = document.getElementById('v-abono');
+    var abono = num(campo ? campo.value : ventaForm.abono);
+    if (abono < 0) abono = 0;
+    if (abono > total) abono = total;
+    html += '<div class="tot-row"><span>Total</span><b>' + money(total) + '</b></div>'
+      + '<div class="tot-row"><span>Abona ahora</span><b>' + money(abono) + '</b></div>'
+      + '<div class="tot-row big debe"><span>Queda debiendo</span><b>' + money(total - abono) + '</b></div>';
+  } else {
+    html += '<div class="tot-row big"><span>Total a cobrar</span><b>' + money(total) + '</b></div>';
+  }
+  return html;
+}
+
+function actualizarTotalesVenta(){
+  var box = document.getElementById('v-tot');
+  if (box) box.innerHTML = totalesVentaHTML();
+}
+
+function cerrarVenta(limpiarSeleccion){
+  ventaOpen = false;
+  ventaItems = [];
+  ventaValores = {};
+  ventaForm = { fecha: today(), apartado: false, cliente: '', abono: '' };
+  if (limpiarSeleccion) seleccion = [];
+  var root = document.getElementById('venta-root');
+  if (root) root.innerHTML = '';
+}
+
+function renderVenta(){
+  var root = document.getElementById('venta-root');
+  if (!ventaOpen){ root.innerHTML = ''; return; }
+  // Se vacia antes de recomponer: si no, los totales se calcularian leyendo las filas
+  // viejas que todavia estan en pantalla (al quitar una prenda seguiria contandola).
+  root.innerHTML = '';
+
+  var filas = ventaItems.map(function(pid){
+    var p = find(pid);
+    if (!p) return '';
+    var conStock = p.variantes.filter(function(x){ return stockDe(p, x) > 0; });
+    if (!conStock.length) return '';
+    var v = ventaValores[pid] || {};
+    var opts = conStock.map(function(x){
+      return '<option value="' + esc(x.id) + '"' + (v.vid === x.id ? ' selected' : '') + '>'
+        + esc(x.talla || 'Sin talla') + ' (' + stockDe(p, x) + ')</option>';
+    }).join('');
+    var foto = p.fotos.length
+      ? '<img class="vi-foto" src="' + esc(p.fotos[0]) + '" alt="">'
+      : '<span class="vi-foto">&#128086;</span>';
+    return '<div class="vi-row" data-pid="' + esc(p.id) + '">' + foto
+      + '<div class="vi-body"><div class="vi-name">' + esc(p.nombre) + '</div>'
+      + '<div class="vi-fields">'
+      + '<label><span class="vi-cap">Talla</span><select class="vi-talla">' + opts + '</select></label>'
+      + '<label><span class="vi-cap">Cant.</span><input class="vi-cant" type="number" inputmode="numeric" step="1" min="1" value="' + (v.cant || 1) + '"></label>'
+      + '<label><span class="vi-cap">Precio</span><input class="vi-precio" type="number" inputmode="decimal" step="0.01" min="0" value="' + esc((v.precio != null) ? v.precio : p.precioVenta) + '"></label>'
+      + '</div></div>'
+      + '<button type="button" class="vi-del" data-act="quitar-item" data-value="' + esc(p.id) + '" aria-label="Quitar">&times;</button></div>';
+  }).join('');
+
+  var esAp = ventaForm.apartado;
+  root.innerHTML = '<div class="modal-backdrop top" data-act="close-venta">'
+    + '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-head"><h2>' + (esAp ? 'Nuevo apartado' : 'Registrar venta') + '</h2>'
+    + '<button class="modal-close" data-act="close-venta" aria-label="Cerrar">&times;</button></div>'
+    + (filas || '<div class="hint">Ya no quedan prendas en esta venta.</div>')
+    + '<div class="field" style="margin-top:16px"><label for="v-fecha">Fecha</label>'
+    + '<input id="v-fecha" type="date" value="' + esc(ventaForm.fecha || today()) + '"></div>'
+    + '<label class="check-row plain" for="v-apartado">'
+    + '<input type="checkbox" id="v-apartado"' + (esAp ? ' checked' : '') + '>'
+    + '<span><span class="ct">Es un apartado</span>'
+    + '<span class="cs">El cliente deja un abono y tiene ' + DIAS_APARTADO + ' dias para pagar el resto. Mientras tanto las prendas quedan reservadas.</span></span></label>'
+    + '<div id="v-ap-box"' + (esAp ? '' : ' hidden') + '>'
+    + '<div class="field"><label for="v-cliente">Cliente</label>'
+    + '<input id="v-cliente" type="text" placeholder="Nombre de quien aparta" value="' + esc(ventaForm.cliente) + '"></div>'
+    + '<div class="field"><label for="v-abono">Monto abonado</label>'
+    + '<input id="v-abono" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" value="' + esc(ventaForm.abono) + '"></div>'
+    + '<div class="hint">Plazo hasta el <span id="v-plazo">' + esc(fechaCorta(fechaMas(ventaForm.fecha || today(), DIAS_APARTADO)))
+    + '</span>. Si no se liquida, las prendas vuelven al inventario y lo abonado queda para el negocio.</div>'
+    + '</div>'
+    + '<div class="tot-box" id="v-tot">' + totalesVentaHTML() + '</div>'
+    + '<button class="btn" id="v-submit" data-act="do-venta">' + (esAp ? 'Registrar apartado' : 'Registrar venta') + '</button>'
+    + '</div></div>';
+}
+
+// ---------- apartados ----------
+function confirmApHTML(texto, act, etiqueta, clase){
+  return '<div class="confirm-box"><div class="confirm-text">' + texto + '</div>'
+    + '<div class="confirm-actions"><button class="btn secondary" data-act="ap-cancel">Cancelar</button>'
+    + '<button class="btn ' + clase + '" data-act="' + act + '">' + etiqueta + '</button></div></div>';
+}
+
+function tarjetaApartadoHTML(a){
+  var est = estadoApartado(a);
+  var dias = diasHasta(a.vence);
+  var resto = restanteDe(a);
+  var urge = est === 'activo' && dias <= 3;
+  var pie;
+  if (est === 'activo'){
+    pie = (dias === 0 ? 'Vence hoy' : dias === 1 ? 'Vence manana' : 'Vence en ' + dias + ' dias')
+      + ' &middot; ' + fechaCorta(a.vence);
+  } else if (est === 'vencido'){
+    pie = 'Vencio el ' + fechaCorta(a.vence) + ' &middot; las prendas volvieron al inventario';
+  } else {
+    pie = 'Liquidado el ' + fechaCorta(a.liquidadoEn || a.fecha);
+  }
+  return '<button class="ap-card" data-act="ap-open" data-value="' + esc(a.id) + '">'
+    + '<div class="ap-top"><span class="ap-cliente">' + esc(a.cliente || 'Sin nombre') + '</span>'
+    + '<span class="pill ' + (urge ? 'pronto' : est) + '">' + (urge ? 'Por vencer' : etiquetaEstado(est)) + '</span></div>'
+    + '<div class="ap-nums">'
+    + '<div class="ap-num"><b>Prendas</b><span>' + unidadesDe(a) + '</span></div>'
+    + '<div class="ap-num"><b>Abonado</b><span>' + money(abonadoDe(a)) + '</span></div>'
+    + '<div class="ap-num"><b>Restante</b><span' + (resto > 0 ? ' class="debe"' : '') + '>' + money(resto) + '</span></div>'
+    + '</div>'
+    + '<div class="ap-foot' + (urge ? ' urge' : '') + '">' + pie + '</div></button>';
+}
+
+function listaApartadosHTML(){
+  var grupos = { activo: [], vencido: [], liquidado: [] };
+  state.apartados.forEach(function(a){ grupos[estadoApartado(a)].push(a); });
+  grupos.activo.sort(function(a, b){ return String(a.vence).localeCompare(String(b.vence)); });
+  grupos.vencido.sort(function(a, b){ return String(b.vence).localeCompare(String(a.vence)); });
+  grupos.liquidado.sort(function(a, b){
+    return String(b.liquidadoEn || b.fecha).localeCompare(String(a.liquidadoEn || a.fecha));
+  });
+
+  var chips = [['activo','Vigentes'],['vencido','Vencidos'],['liquidado','Liquidados']].map(function(c){
+    return '<button class="chip" data-act="ap-filtro" data-value="' + c[0] + '" aria-pressed="' + (apFiltro === c[0]) + '">'
+      + c[1] + ' (' + grupos[c[0]].length + ')</button>';
+  }).join('');
+
+  var lista = grupos[apFiltro] || [];
+  var vacio = apFiltro === 'activo'
+    ? 'No hay apartados vigentes. Se crean desde la pestana Vender, marcando "Es un apartado".'
+    : apFiltro === 'vencido'
+      ? 'Ningun apartado se ha vencido.'
+      : 'Todavia no liquidaste ningun apartado.';
+
+  return '<div class="modal-backdrop top" data-act="close-ap">'
+    + '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-head"><h2>Apartados</h2>'
+    + '<button class="modal-close" data-act="close-ap" aria-label="Cerrar">&times;</button></div>'
+    + '<div class="filters">' + chips + '</div>'
+    + (lista.length ? lista.map(tarjetaApartadoHTML).join('') : '<div class="hint">' + vacio + '</div>')
+    + '</div></div>';
+}
+
+function detalleApartadoHTML(){
+  var a = apartado(apDetalle);
+  if (!a){ apDetalle = null; return listaApartadosHTML(); }
+
+  var est = estadoApartado(a);
+  var total = totalApartado(a);
+  var ab = abonadoDe(a);
+  var resto = restanteDe(a);
+  var dias = diasHasta(a.vence);
+
+  var items = a.items.map(function(it){
+    var p = find(it.productoId);
+    var foto = (p && p.fotos.length)
+      ? '<img class="vi-foto" src="' + esc(p.fotos[0]) + '" alt="">'
+      : '<span class="vi-foto">&#128086;</span>';
+    return '<div class="ap-item">' + foto
+      + '<div class="ap-item-body"><div class="ap-item-name">' + esc(it.nombre || (p ? p.nombre : 'Prenda')) + '</div>'
+      + '<div class="ap-item-meta">' + it.cantidad + ' u. &middot; ' + esc(it.talla || 'sin talla')
+      + ' &middot; ' + money(it.precioUnitario) + ' c/u' + (p ? '' : ' &middot; prenda borrada') + '</div></div>'
+      + '<div class="ap-item-sub">' + money(it.precioUnitario * it.cantidad) + '</div></div>';
+  }).join('');
+
+  var abonos = a.abonos.length
+    ? a.abonos.map(function(x){
+        return '<div class="abono-line"><span>' + esc(x.fecha) + '</span><b>&plus;' + money(x.monto) + '</b></div>';
+      }).join('')
+    : '<div class="hint">Sin abonos registrados: aparto sin dejar nada.</div>';
+
+  var estadoTxt;
+  if (est === 'activo'){
+    estadoTxt = 'Apartado el ' + fechaCorta(a.fecha) + '. Vence el ' + fechaCorta(a.vence)
+      + (dias === 0 ? ' (hoy)' : dias === 1 ? ' (manana)' : ' (en ' + dias + ' dias)') + '.';
+  } else if (est === 'vencido'){
+    estadoTxt = 'Se vencio el ' + fechaCorta(a.vence) + '. Las prendas ya volvieron al inventario y los '
+      + money(ab) + ' abonados quedaron para el negocio.';
+  } else {
+    estadoTxt = 'Liquidado el ' + fechaCorta(a.liquidadoEn || a.fecha) + '. Las prendas quedaron registradas como vendidas.';
+  }
+
+  var acciones;
+  if (apAccion === 'del'){
+    acciones = confirmApHTML('Se borra el apartado entero: las prendas vuelven al inventario y los '
+      + money(ab) + ' abonados dejan de contar en la caja. Usalo solo si lo registraste por error.',
+      'ap-do-del', 'Si, borrar', 'solid-danger');
+  } else if (apAccion === 'liq'){
+    acciones = confirmApHTML((resto > 0
+        ? 'Se cobran los ' + money(resto) + ' que faltan y las '
+        : 'Ya esta pagado completo. Las ')
+      + unidadesDe(a) + ' prenda' + (unidadesDe(a) === 1 ? '' : 's') + ' pasan a vendidas.',
+      'ap-do-liq', 'Si, liquidar', '');
+  } else if (apAccion === 'undo'){
+    acciones = confirmApHTML('Se borran las ventas que genero este apartado y vuelve a quedar pendiente de pago.',
+      'ap-do-undo', 'Si, deshacer', 'solid-danger');
+  } else if (est === 'liquidado'){
+    acciones = '<button class="btn secondary" data-act="ap-arm-undo">Deshacer liquidacion</button>'
+      + '<button class="btn danger" style="margin-top:10px" data-act="ap-arm-del">Borrar apartado</button>';
+  } else {
+    acciones = '<div class="section-title">Registrar un abono</div>'
+      + '<div class="inline-form"><input id="ap-abono" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00">'
+      + '<button class="btn inline" data-act="ap-abonar">Abonar</button></div>'
+      + (resto > 0 ? '<div class="hint" style="margin-top:8px">Faltan ' + money(resto) + '.</div>' : '')
+      + '<div class="divider"></div>'
+      + '<button class="btn" data-act="ap-arm-liq">'
+      + (resto > 0 ? 'Liquidar y cobrar ' + money(resto) : 'Liquidar (ya esta pagado)') + '</button>'
+      + (est === 'vencido'
+          ? '<div class="hint" style="margin-top:8px">Si el cliente aparece tarde y las prendas siguen en el inventario, puedes liquidarlo igual.</div>'
+          : '')
+      + '<button class="btn danger" style="margin-top:10px" data-act="ap-arm-del">Borrar apartado</button>';
+  }
+
+  return '<div class="modal-backdrop top" data-act="close-ap">'
+    + '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-head"><h2>' + esc(a.cliente || 'Apartado') + '</h2>'
+    + '<button class="modal-close" data-act="close-ap" aria-label="Cerrar">&times;</button></div>'
+    + '<div class="title-row"><button class="linkbtn" data-act="ap-back">&larr; Todos los apartados</button>'
+    + '<span class="pill ' + est + '">' + etiquetaEstado(est) + '</span></div>'
+    + '<div class="hint" style="margin-top:10px">' + estadoTxt + '</div>'
+    + '<div class="divider"></div>'
+    + '<div class="section-title">Prendas</div>' + items
+    + '<div class="tot-box">'
+    + '<div class="tot-row"><span>Total</span><b>' + money(total) + '</b></div>'
+    + '<div class="tot-row"><span>Abonado</span><b>' + money(ab) + '</b></div>'
+    + '<div class="tot-row big' + (resto > 0 ? ' debe' : '') + '">'
+    + '<span>' + (est === 'liquidado' ? 'Sin saldo' : 'Falta por cobrar') + '</span><b>' + money(resto) + '</b></div>'
+    + '</div>'
+    + '<div class="section-title">Abonos</div>' + abonos
+    + '<div class="divider"></div>' + acciones
+    + '</div></div>';
+}
+
+function renderApartados(){
+  var root = document.getElementById('ap-root');
+  if (!apOpen){ root.innerHTML = ''; return; }
+  root.innerHTML = apDetalle ? detalleApartadoHTML() : listaApartadosHTML();
+}
+
 function renderTopbar(){
   var t = totals();
   var el = document.getElementById('topbar-total');
@@ -1469,11 +2055,13 @@ function render(){
   var c = document.getElementById('content');
   c.innerHTML = tab === 'inventario' ? viewInventario()
     : tab === 'agregar' ? viewAgregar()
+    : tab === 'vender' ? viewVender()
     : tab === 'gastos' ? viewGastos()
     : viewResumen();
   renderModal();
   renderProveedores();
   renderHistorial();
+  renderApartados();
 }
 
 // Guarda lo tipeado en las tarjetas de proveedor antes de re-renderizar el modal.
@@ -1493,6 +2081,7 @@ function setTab(next){
   rememberTab();
   if (next !== 'agregar') drafts = [];
   if (next !== 'gastos') armedGasto = null;
+  if (next !== 'vender') seleccion = [];
   render();
 }
 
@@ -1517,16 +2106,16 @@ function readTallaRows(containerId, prev, p){
     var cant = int(rows[i].querySelector('.t-qty').value, 1);
     if (cant < 1) cant = 1;
     if (vid && p){
-      var minimo = vendidasDe(p, vid);
+      var minimo = comprometidasDe(p, vid);
       if (cant < minimo) cant = minimo;
     }
     out.push({ id: vid || uid('v'), talla: talla, cantidad: cant });
   }
-  // Ninguna variante con ventas puede desaparecer aunque falte su fila.
+  // Ninguna variante con ventas o apartados puede desaparecer aunque falte su fila.
   if (p){
     p.variantes.forEach(function(v){
       var kept = out.some(function(o){ return o.id === v.id; });
-      if (!kept && vendidasDe(p, v.id) > 0) out.push(v);
+      if (!kept && comprometidasDe(p, v.id) > 0) out.push(v);
     });
   }
   if (!out.length) out = [{ id: uid('v'), talla: '', cantidad: 1 }];
@@ -1550,10 +2139,111 @@ document.addEventListener('click', function(e){
     openId = null; askDelete = false; renderModal(); return;
   }
 
+  if (act === 'pick'){
+    var yaEsta = seleccion.indexOf(val);
+    if (yaEsta >= 0) seleccion.splice(yaEsta, 1);
+    else seleccion.push(val);
+    render(); return;
+  }
+  if (act === 'limpiar-sel'){ seleccion = []; render(); return; }
+  if (act === 'abrir-venta'){
+    if (!seleccion.length){ toast('Elige al menos una prenda.'); return; }
+    ventaItems = seleccion.slice();
+    ventaValores = {};
+    ventaForm = { fecha: today(), apartado: false, cliente: '', abono: '' };
+    ventaOpen = true;
+    renderVenta(); return;
+  }
+  if (act === 'close-venta'){
+    if (e.target !== el) return;
+    cerrarVenta(false); return;
+  }
+  if (act === 'quitar-item'){
+    cosecharVenta();
+    ventaItems = ventaItems.filter(function(x){ return x !== val; });
+    seleccion = seleccion.filter(function(x){ return x !== val; });
+    if (!ventaItems.length){ cerrarVenta(true); render(); return; }
+    renderVenta();
+    render();
+    return;
+  }
+  if (act === 'do-venta'){
+    cosecharVenta();
+    var itemsV = itemsVenta();
+    if (!itemsV.length){ toast('No hay prendas en esta venta.'); return; }
+
+    var problema = null;
+    var totalV = 0;
+    for (var iv = 0; iv < itemsV.length && !problema; iv++){
+      var itv = itemsV[iv];
+      var pv2 = find(itv.productoId);
+      if (!pv2){ problema = 'Una de las prendas ya no existe.'; break; }
+      var varv = null;
+      for (var jv = 0; jv < pv2.variantes.length; jv++){
+        if (pv2.variantes[jv].id === itv.varianteId) varv = pv2.variantes[jv];
+      }
+      if (!varv){ problema = 'Elige la talla de "' + pv2.nombre + '".'; break; }
+      if (itv.cantidad < 1){ problema = 'La cantidad de "' + pv2.nombre + '" tiene que ser 1 o mas.'; break; }
+      var libreV = stockDe(pv2, varv);
+      if (itv.cantidad > libreV){
+        problema = 'De "' + pv2.nombre + '" (' + (varv.talla || 'sin talla') + ') solo quedan ' + libreV + '.';
+        break;
+      }
+      if (!(itv.precioUnitario >= 0)){ problema = 'Revisa el precio de "' + pv2.nombre + '".'; break; }
+      itv.nombre = pv2.nombre;
+      itv.talla = varv.talla || '';
+      totalV += itv.precioUnitario * itv.cantidad;
+    }
+    if (problema){ toast(problema); return; }
+
+    var fechaV = ventaForm.fecha || today();
+
+    if (!ventaForm.apartado){
+      itemsV.forEach(function(it){
+        var pp = find(it.productoId);
+        if (!pp) return;
+        pp.ventas.push({
+          id: uid('s'), varianteId: it.varianteId, cantidad: it.cantidad,
+          precioUnitario: it.precioUnitario, fecha: fechaV, apartadoId: null
+        });
+      });
+      cerrarVenta(true);
+      render(); save();
+      toast('Venta registrada: ' + money(totalV) + '.');
+      return;
+    }
+
+    var clienteV = String(ventaForm.cliente || '').trim();
+    if (!clienteV){ toast('Escribe el nombre del cliente que aparta.'); return; }
+    var abonoV = num(ventaForm.abono);
+    if (abonoV < 0) abonoV = 0;
+    if (abonoV > totalV) abonoV = totalV;
+    var nuevoAp = {
+      id: uid('ap'),
+      cliente: clienteV,
+      fecha: fechaV,
+      vence: fechaMas(fechaV, DIAS_APARTADO),
+      estado: 'activo',
+      liquidadoEn: '',
+      items: itemsV.map(function(it){
+        return {
+          productoId: it.productoId, varianteId: it.varianteId, nombre: it.nombre,
+          talla: it.talla, cantidad: it.cantidad, precioUnitario: it.precioUnitario
+        };
+      }),
+      abonos: abonoV > 0 ? [{ id: uid('ab'), monto: abonoV, fecha: fechaV }] : []
+    };
+    state.apartados.unshift(nuevoAp);
+    cerrarVenta(true);
+    render(); save();
+    toast('Apartado de ' + clienteV + ': faltan ' + money(totalV - abonoV) + ' hasta el ' + fechaCorta(nuevoAp.vence) + '.');
+    return;
+  }
+
   if (act === 'add-talla'){
     var box = document.getElementById(val);
     if (!box) return;
-    box.insertAdjacentHTML('beforeend', tallaRowHTML(null, 0));
+    box.insertAdjacentHTML('beforeend', tallaRowHTML(null, 0, 0));
     return;
   }
   if (act === 'del-talla'){
@@ -1617,23 +2307,6 @@ document.addEventListener('click', function(e){
     return;
   }
 
-  // Cambia gasto/ingreso sin re-renderizar, para no perder lo ya tipeado.
-  if (act === 'mov-tipo'){
-    movTipo = val;
-    var chips = el.parentNode.querySelectorAll('.chip');
-    for (var ci = 0; ci < chips.length; ci++){
-      chips[ci].setAttribute('aria-pressed', chips[ci].getAttribute('data-value') === val ? 'true' : 'false');
-    }
-    var esIng = val === 'ingreso';
-    var wrap = document.getElementById('g-cat-wrap');
-    if (wrap) wrap.hidden = esIng;
-    var boton = document.querySelector('#gasto-form button[type="submit"]');
-    if (boton) boton.textContent = esIng ? 'Ingresar a caja' : 'Anotar gasto';
-    var concepto = document.getElementById('g-concepto');
-    if (concepto) concepto.placeholder = esIng ? 'Puse dinero propio' : 'Anuncio en Instagram';
-    return;
-  }
-
   if (act === 'signin-google'){
     signInWithPopup(auth, new GoogleAuthProvider()).catch(function(err){
       if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
@@ -1679,6 +2352,106 @@ document.addEventListener('click', function(e){
     deleteDoc(doc(colPapelera, val)).catch(function(){});
     renderPapelera();
     toast('"' + nombrePurgado + '" borrada definitivamente.');
+    return;
+  }
+
+  if (act === 'open-ap'){
+    apOpen = true; apDetalle = null; apAccion = null;
+    apFiltro = 'activo';
+    renderApartados(); return;
+  }
+  if (act === 'close-ap'){
+    if (e.target !== el) return;
+    apOpen = false; apDetalle = null; apAccion = null; renderApartados(); return;
+  }
+  if (act === 'ap-filtro'){ apFiltro = val; renderApartados(); return; }
+  if (act === 'ap-open'){ apDetalle = val; apAccion = null; renderApartados(); return; }
+  if (act === 'ap-back'){ apDetalle = null; apAccion = null; renderApartados(); return; }
+  if (act === 'ap-cancel'){ apAccion = null; renderApartados(); return; }
+  if (act === 'ap-arm-del'){ apAccion = 'del'; renderApartados(); return; }
+  if (act === 'ap-arm-liq'){ apAccion = 'liq'; renderApartados(); return; }
+  if (act === 'ap-arm-undo'){ apAccion = 'undo'; renderApartados(); return; }
+
+  if (act === 'ap-abonar'){
+    var apAb = apartado(apDetalle); if (!apAb) return;
+    var campoAb = document.getElementById('ap-abono');
+    var montoAb = num(campoAb ? campoAb.value : 0);
+    if (montoAb <= 0){ toast('Escribe cuanto abono el cliente.'); return; }
+    var faltaAb = restanteDe(apAb);
+    if (faltaAb <= 0){ toast('Este apartado ya esta pagado completo.'); return; }
+    if (montoAb > faltaAb){
+      montoAb = faltaAb;
+      toast('Solo faltaban ' + money(faltaAb) + ', se anoto eso.');
+    }
+    apAb.abonos.push({ id: uid('ab'), monto: montoAb, fecha: today() });
+    render(); save();
+    var restaAhora = restanteDe(apAb);
+    toast(restaAhora === 0
+      ? 'Abono anotado. Ya esta pagado completo: puedes liquidarlo.'
+      : 'Abono de ' + money(montoAb) + ' anotado. Faltan ' + money(restaAhora) + '.');
+    return;
+  }
+
+  if (act === 'ap-do-liq'){
+    var apLiq = apartado(apDetalle); if (!apLiq) return;
+    // Si ya se habia vencido, las prendas volvieron al inventario: hay que confirmar
+    // que siguen ahi y no se le vendieron a alguien mas.
+    var sinStock = null;
+    if (estadoApartado(apLiq) !== 'activo'){
+      apLiq.items.forEach(function(it){
+        if (sinStock) return;
+        var pp = find(it.productoId);
+        if (!pp){ sinStock = it.nombre || 'Una prenda'; return; }
+        var vv = null;
+        pp.variantes.forEach(function(x){ if (x.id === it.varianteId) vv = x; });
+        if (!vv || stockDe(pp, vv) < it.cantidad) sinStock = it.nombre || pp.nombre;
+      });
+    }
+    if (sinStock){
+      apAccion = null; renderApartados();
+      toast('Ya no hay stock de "' + sinStock + '": se vendio despues de que vencio.');
+      return;
+    }
+    var restoLiq = restanteDe(apLiq);
+    apLiq.items.forEach(function(it){
+      var pp = find(it.productoId);
+      if (!pp) return;
+      pp.ventas.push({
+        id: uid('s'), varianteId: it.varianteId, cantidad: it.cantidad,
+        precioUnitario: it.precioUnitario, fecha: today(), apartadoId: apLiq.id
+      });
+    });
+    apLiq.estado = 'liquidado';
+    apLiq.liquidadoEn = today();
+    apAccion = null;
+    render(); save();
+    toast(restoLiq > 0 ? 'Liquidado. Entraron ' + money(restoLiq) + ' a la caja.' : 'Apartado liquidado.');
+    return;
+  }
+
+  if (act === 'ap-do-undo'){
+    var apUndo = apartado(apDetalle); if (!apUndo) return;
+    state.products.forEach(function(pp){
+      pp.ventas = pp.ventas.filter(function(s){ return s.apartadoId !== apUndo.id; });
+    });
+    apUndo.estado = 'activo';
+    apUndo.liquidadoEn = '';
+    apAccion = null;
+    apFiltro = estadoApartado(apUndo);
+    render(); save();
+    toast('Liquidacion deshecha: el apartado vuelve a quedar pendiente.');
+    return;
+  }
+
+  if (act === 'ap-do-del'){
+    var apDel = apartado(apDetalle); if (!apDel) return;
+    state.products.forEach(function(pp){
+      pp.ventas = pp.ventas.filter(function(s){ return s.apartadoId !== apDel.id; });
+    });
+    state.apartados = state.apartados.filter(function(x){ return x.id !== apDel.id; });
+    apDetalle = null; apAccion = null;
+    render(); save();
+    toast('Apartado de ' + (apDel.cliente || 'sin nombre') + ' borrado.');
     return;
   }
 
@@ -1745,18 +2518,6 @@ document.addEventListener('click', function(e){
     toast('Gasto "' + (borrado ? borrado.concepto : '') + '" borrado.');
     return;
   }
-  if (act === 'del-ingreso'){
-    var borradoIng = null;
-    state.ingresos = state.ingresos.filter(function(i){
-      if (i.id === val){ borradoIng = i; return false; }
-      return true;
-    });
-    armedGasto = null;
-    render(); save();
-    toast('Ingreso "' + (borradoIng ? borradoIng.concepto : '') + '" borrado.');
-    return;
-  }
-
   if (act === 'update'){
     var pu = find(openId); if (!pu) return;
     var nombre = document.getElementById('m-nombre').value.trim();
@@ -1793,6 +2554,16 @@ document.addEventListener('click', function(e){
 
   if (act === 'undo-venta'){
     var pv = find(openId); if (!pv) return;
+    var ventaObj = null;
+    pv.ventas.forEach(function(s){ if (s.id === val) ventaObj = s; });
+    // Las ventas que salieron de liquidar un apartado se deshacen desde el apartado,
+    // asi no queda marcado como cobrado sin tener sus ventas.
+    if (ventaObj && ventaObj.apartadoId){
+      var duenio = apartado(ventaObj.apartadoId);
+      toast('Esa venta salio de un apartado' + (duenio && duenio.cliente ? ' de ' + duenio.cliente : '')
+        + '. Deshazla desde Resumen, en Apartados.');
+      return;
+    }
     pv.ventas = pv.ventas.filter(function(s){ return s.id !== val; });
     render(); save(); toast('Venta deshecha.'); return;
   }
@@ -1848,13 +2619,6 @@ document.addEventListener('submit', function(e){
     var monto = parseFloat(document.getElementById('g-monto').value);
     var fechaMov = document.getElementById('g-fecha').value || today();
     if (!concepto || isNaN(monto)){ toast('Escribe el concepto y el monto.'); return; }
-    if (movTipo === 'ingreso'){
-      state.ingresos.unshift({ id: uid('i'), concepto: concepto, monto: monto, fecha: fechaMov });
-      armedGasto = null;
-      render(); save();
-      toast('Ingreso de ' + money(monto) + ' sumado a la caja.');
-      return;
-    }
     state.gastos.unshift({
       id: uid('g'),
       concepto: concepto,
@@ -1868,7 +2632,36 @@ document.addEventListener('submit', function(e){
   }
 });
 
+// Los campos del formulario de venta se actualizan en el sitio, sin volver a dibujarlo,
+// para no borrar lo que la persona ya escribio.
+document.addEventListener('input', function(e){
+  if (!ventaOpen || !e.target.closest) return;
+  if (!e.target.closest('#venta-root')) return;
+  actualizarTotalesVenta();
+});
+
 document.addEventListener('change', function(e){
+  if (e.target.id === 'v-apartado'){
+    ventaForm.apartado = e.target.checked;
+    var cajaAp = document.getElementById('v-ap-box');
+    if (cajaAp) cajaAp.hidden = !ventaForm.apartado;
+    var botonV = document.getElementById('v-submit');
+    if (botonV) botonV.textContent = ventaForm.apartado ? 'Registrar apartado' : 'Registrar venta';
+    var tituloV = document.querySelector('#venta-root .modal-head h2');
+    if (tituloV) tituloV.textContent = ventaForm.apartado ? 'Nuevo apartado' : 'Registrar venta';
+    actualizarTotalesVenta();
+    return;
+  }
+  if (e.target.id === 'v-fecha'){
+    ventaForm.fecha = e.target.value || today();
+    var plazo = document.getElementById('v-plazo');
+    if (plazo) plazo.textContent = fechaCorta(fechaMas(ventaForm.fecha, DIAS_APARTADO));
+    return;
+  }
+  if (ventaOpen && e.target.closest && e.target.closest('#venta-root')){
+    actualizarTotalesVenta();
+    return;
+  }
   // "Proveedor nuevo..." revela el campo para escribir el nombre.
   var campoNuevo = e.target.getAttribute && e.target.getAttribute('data-nuevo');
   if (campoNuevo){

@@ -1,7 +1,7 @@
 # Mi Reventa
 
 App para llevar el control de un negocio de reventa de ropa: inventario con fotos,
-tallas y cantidades, movimientos de caja y resumen de ganancias.
+tallas y cantidades, ventas, apartados, gastos y resumen de ganancias.
 
 Es una sola pagina HTML sin servidor propio ni build. El unico servicio externo es
 Firebase (Auth + Firestore) para el inicio de sesion y guardar los datos.
@@ -35,8 +35,15 @@ lectura/escritura a los correos autorizados.
 ## Que registra
 
 - **Inventario**: prendas con foto, costo, precio de venta, proveedor y cantidades por talla.
-- **Caja**: gastos del negocio (publicidad, transporte, empaque) e ingresos de dinero propio.
-- **Resumen**: dinero disponible, ganancia neta, margen de ventas e inversion en stock.
+- **Vender**: se eligen varias prendas de una galeria (foto, nombre y precio) y se registra
+  la venta completa de una vez.
+- **Apartados**: esa misma venta se puede marcar como apartado, anotando el monto abonado.
+  Las prendas quedan reservadas (no aparecen como disponibles) y hay 14 dias para liquidar.
+  Pasado el plazo la prenda vuelve al inventario y lo abonado queda para el negocio.
+- **Gastos**: lo que sale de la caja (publicidad, transporte, empaque).
+- **Resumen**: dinero disponible, estado de los apartados, ganancia neta, margen de ventas
+  e inversion en ropa sin vender.
 
 La ropa comprada antes de empezar a usar la app se marca como "ya la tenia" para que su
-costo no descuente de la caja, ya que ese gasto ocurrio antes.
+costo no descuente de la caja, ya que ese gasto ocurrio antes. El dinero solo entra al
+negocio vendiendo prendas o cobrando apartados; no hay ingresos sueltos.
