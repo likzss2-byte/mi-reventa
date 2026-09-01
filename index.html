@@ -337,6 +337,7 @@ var colGastos = collection(db, 'gastos');
 var colIngresos = collection(db, 'ingresos');   // ya no se usa: solo queda para limpiarla
 var colProveedores = collection(db, 'proveedores');
 var colApartados = collection(db, 'apartados');
+var colCerradas = collection(db, 'cerradas');
 var colSuscripciones = collection(db, 'suscripciones');
 var histRef = collection(db, 'historial');
 var colPapelera = collection(db, 'papelera');
@@ -361,7 +362,7 @@ var CLAVE_RESPALDO = 'mi_reventa_ultimo_respaldo';
 
 var CATEGORIAS = ['Publicidad', 'Transporte', 'Operarios', 'Empaque y envio', 'Alquiler', 'Otros'];
 
-var state = { capitalInicial: 0, products: [], gastos: [], proveedores: [], apartados: [] };
+var state = { capitalInicial: 0, products: [], gastos: [], proveedores: [], apartados: [], cerradas: [] };
 var tab = readTab();
 var filter = 'todos';
 var openId = null;
@@ -407,11 +408,11 @@ var ingresosLimpiados = false;
 
 // Espejo de lo ultimo confirmado por el servidor. save() compara contra esto para
 // escribir solo lo que cambio, y para saber que se borro.
-var espejo = { config: null, productos: {}, gastos: {}, proveedores: {}, apartados: {} };
+var espejo = { config: null, productos: {}, gastos: {}, proveedores: {}, apartados: {}, cerradas: {} };
 // datosListos solo se activa cuando las 5 fuentes cargaron: escribir con el estado
 // a medias borraria lo que todavia no llego.
 var fuentesCargadas = {};
-var FUENTES = ['config', 'productos', 'gastos', 'proveedores', 'apartados'];
+var FUENTES = ['config', 'productos', 'gastos', 'proveedores', 'apartados', 'cerradas'];
 var unsubs = [];
 var migrando = false;
 
@@ -454,7 +455,8 @@ function migrate(raw){
     products: Array.isArray(s.products) ? s.products : [],
     gastos: Array.isArray(s.gastos) ? s.gastos : [],
     proveedores: Array.isArray(s.proveedores) ? s.proveedores : [],
-    apartados: Array.isArray(s.apartados) ? s.apartados : []
+    apartados: Array.isArray(s.apartados) ? s.apartados : [],
+    cerradas: Array.isArray(s.cerradas) ? s.cerradas : []
   };
   out.proveedores = out.proveedores.map(function(v){
     return { id: v.id || uid('pr'), nombre: v.nombre || '', contacto: v.contacto || '' };
@@ -550,6 +552,18 @@ function migrate(raw){
       abonos: (Array.isArray(a.abonos) ? a.abonos : []).map(function(ab){
         return { id: ab.id || uid('ab'), monto: num(ab.monto), fecha: ab.fecha || fecha };
       })
+    };
+  });
+  out.cerradas = out.cerradas.map(function(c){
+    return {
+      id: c.id || uid('c'),
+      nombre: c.nombre || '',
+      fecha: c.fecha || today(),
+      costoPagado: num(c.costoPagado),
+      cobrado: num(c.cobrado),
+      ganancia: num(c.ganancia),
+      unidadesVendidas: int(c.unidadesVendidas, 0),
+      borradoPor: c.borradoPor || ''
     };
   });
   return out;
@@ -721,6 +735,23 @@ function apartadas(p){
   return t;
 }
 
+// Deja asentado el paso de una prenda por la caja antes de sacarla del inventario.
+// Sin esto, borrar una prenda vendida borraria tambien el dinero que dejo, y borrar
+// una comprada le devolveria a la caja un dinero que en realidad ya se gasto.
+function cerrarPrenda(p){
+  var costoTotal = p.costo * compradas(p);
+  state.cerradas.unshift({
+    id: p.id,
+    nombre: p.nombre,
+    fecha: today(),
+    costoPagado: p.stockInicial ? 0 : costoTotal,
+    cobrado: cobradoDe(p),
+    ganancia: gananciaDe(p),
+    unidadesVendidas: vendidas(p),
+    borradoPor: usuario ? usuario.email : ''
+  });
+}
+
 function etiquetaVariante(p, varianteId){
   for (var i = 0; i < p.variantes.length; i++){
     if (p.variantes[i].id === varianteId) return p.variantes[i].talla || 'sin talla';
@@ -736,7 +767,7 @@ function totals(){
     caja: 0, comprasNuevas: 0, valorStockInicial: 0, cobrado: 0,
     gastos: 0, gananciaBruta: 0, gananciaNeta: 0,
     invertidoEnStock: 0, unidadesStock: 0, unidadesVendidas: 0, unidadesApartadas: 0,
-    prendasIniciales: 0,
+    prendasIniciales: 0, prendasCerradas: 0, cobradoCerrado: 0,
     apActivos: 0, apAbonado: 0, apPorCobrar: 0, apValor: 0,
     apVencidos: 0, apPerdidos: 0, apPorVencer: 0, apLiquidados: 0
   };
@@ -754,6 +785,17 @@ function totals(){
     t.unidadesStock += disponibles(p);
     t.unidadesApartadas += apartadas(p);
     t.unidadesVendidas += vendidas(p);
+  });
+  // Prendas ya borradas: lo que gastaste comprandolas y lo que cobraste vendiendolas
+  // sigue contando. Lo unico que deja de contar es el stock, que efectivamente ya no
+  // tienes. Sacar algo del inventario no rescribe el dinero que ya se movio.
+  state.cerradas.forEach(function(c){
+    t.comprasNuevas += c.costoPagado;
+    t.cobrado += c.cobrado;
+    t.gananciaBruta += c.ganancia;
+    t.unidadesVendidas += c.unidadesVendidas;
+    t.cobradoCerrado += c.cobrado;
+    t.prendasCerradas++;
   });
   t.gastos = state.gastos.reduce(function(a, g){ return a + g.monto; }, 0);
   state.apartados.forEach(function(a){
@@ -834,6 +876,7 @@ function save(){
   sincronizarColeccion(state.gastos, colGastos, espejo.gastos);
   sincronizarColeccion(state.proveedores, colProveedores, espejo.proveedores);
   sincronizarColeccion(state.apartados, colApartados, espejo.apartados);
+  sincronizarColeccion(state.cerradas, colCerradas, espejo.cerradas);
 
   archivarVersion();
 }
@@ -1138,6 +1181,7 @@ function suscribirDatos(){
   unsubs.push(suscribirColeccion(colGastos, 'gastos', 'gastos'));
   unsubs.push(suscribirColeccion(colProveedores, 'proveedores', 'proveedores'));
   unsubs.push(suscribirColeccion(colApartados, 'apartados', 'apartados'));
+  unsubs.push(suscribirColeccion(colCerradas, 'cerradas', 'cerradas'));
 
   unsubscribeDatos = function(){
     unsubs.forEach(function(u){ try{ u(); }catch(e){} });
@@ -1160,7 +1204,7 @@ function limpiarIngresosViejos(){
 
 function migrarSiHaceFalta(){
   var vacio = !state.products.length && !state.gastos.length
-    && !state.proveedores.length && !state.apartados.length;
+    && !state.proveedores.length && !state.apartados.length && !state.cerradas.length;
   if (!vacio) return;
 
   getDoc(docRef).then(function(snap){
@@ -1763,6 +1807,11 @@ function viewResumen(){
     + '<div class="stat-tile"><div class="stat-label">Unidades vendidas</div><div class="stat-value">' + t.unidadesVendidas + '</div></div>'
     + '</div>'
     + '<div class="hint" style="margin-top:10px">El margen de ventas es lo que ganaste sobre el costo de lo que ya vendiste. Un apartado suma margen recien cuando se liquida; si se vence, lo abonado pasa entero a la ganancia porque la prenda vuelve al inventario.</div>'
+    + (t.prendasCerradas > 0
+        ? '<div class="hint" style="margin-top:10px">Incluye ' + money(t.cobradoCerrado) + ' cobrados de '
+          + t.prendasCerradas + ' prenda' + (t.prendasCerradas === 1 ? ' que borraste' : 's que borraste')
+          + '. Sacarlas del inventario no deshace el dinero que ya habian movido.</div>'
+        : '')
     + '<div class="section-title">Entradas y salidas</div>'
     + '<div class="bar-compare">'
     + barra('Compras', 'cost', t.comprasNuevas)
@@ -1860,20 +1909,24 @@ function renderModal(){
     : '<div class="hint">Sin ventas registradas todavia.</div>';
 
   var nVentas = p.ventas.length;
-  var avisoBorrado = nVentas === 0
-    ? 'La prenda sale del inventario y va a la papelera, donde puedes recuperarla con sus fotos.'
-    : nVentas === 1
-      ? 'La prenda y su venta salen del inventario y van a la papelera, donde puedes recuperarlas.'
-      : 'La prenda y sus ' + nVentas + ' ventas salen del inventario y van a la papelera, donde puedes recuperarlas.';
-  if (apartadas(p) > 0){
-    avisoBorrado += ' Ojo: tiene ' + apartadas(p) + ' unidad' + (apartadas(p) === 1 ? '' : 'es')
-      + ' en apartados vigentes, que van a quedar sin prenda.';
+  var reservadas = apartadas(p);
+  var deleteBlock;
+  if (reservadas > 0){
+    deleteBlock = '<div class="hint">No se puede eliminar mientras tenga ' + reservadas
+      + ' unidad' + (reservadas === 1 ? '' : 'es') + ' en apartados vigentes. '
+      + 'Liquida o borra ese apartado primero, en Resumen &rarr; Apartados.</div>';
+  } else {
+    var avisoBorrado = 'La prenda sale del inventario y va a la papelera, donde puedes recuperarla con sus fotos.';
+    if (nVentas > 0){
+      avisoBorrado += ' El dinero de ' + (nVentas === 1 ? 'su venta' : 'sus ' + nVentas + ' ventas')
+        + ' se queda en la caja: sacarla del inventario no deshace lo que ya cobraste.';
+    }
+    deleteBlock = askDelete
+      ? '<div class="confirm-box"><div class="confirm-text">' + avisoBorrado + '</div>'
+        + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-delete">Cancelar</button>'
+        + '<button class="btn solid-danger" data-act="confirm-delete">Si, eliminar</button></div></div>'
+      : '<button class="btn danger" data-act="ask-delete">Eliminar prenda</button>';
   }
-  var deleteBlock = askDelete
-    ? '<div class="confirm-box"><div class="confirm-text">' + avisoBorrado + '</div>'
-      + '<div class="confirm-actions"><button class="btn secondary" data-act="cancel-delete">Cancelar</button>'
-      + '<button class="btn solid-danger" data-act="confirm-delete">Si, eliminar</button></div></div>'
-    : '<button class="btn danger" data-act="ask-delete">Eliminar prenda</button>';
 
   root.innerHTML = '<div class="modal-backdrop" data-act="close">'
     + '<div class="modal-sheet">'
@@ -2546,6 +2599,9 @@ document.addEventListener('click', function(e){
     delete limpia.borradoPor;
     if (find(limpia.id)){ toast('Esa prenda ya esta en el inventario.'); return; }
     state.products.unshift(limpia);
+    // Vuelve con sus ventas, asi que se retira el asiento que las representaba
+    // mientras estuvo borrada; si no, el dinero contaria dos veces.
+    state.cerradas = state.cerradas.filter(function(c){ return c.id !== limpia.id; });
     papEntradas = papEntradas.filter(function(p){ return p.id !== val; });
     deleteDoc(doc(colPapelera, val)).catch(function(){});
     papOpen = false; armedPap = null;
@@ -2644,6 +2700,14 @@ document.addEventListener('click', function(e){
 
   if (act === 'ap-do-undo'){
     var apUndo = apartado(apDetalle); if (!apUndo) return;
+    // Si alguna prenda ya no existe, sus ventas no se pueden devolver y el abonado
+    // volveria a contarse encima de lo ya cobrado.
+    var faltaPrenda = apUndo.items.some(function(it){ return !find(it.productoId); });
+    if (faltaPrenda){
+      apAccion = null; renderApartados();
+      toast('Alguna de sus prendas ya no esta en el inventario. Deshacerlo descuadraria la caja.');
+      return;
+    }
     state.products.forEach(function(pp){
       pp.ventas = pp.ventas.filter(function(s){ return s.apartadoId !== apUndo.id; });
     });
@@ -2785,12 +2849,24 @@ document.addEventListener('click', function(e){
   if (act === 'cancel-delete'){ askDelete = false; renderModal(); return; }
   if (act === 'confirm-delete'){
     var borrada = find(openId);
-    // Se copia a la papelera ANTES de quitarla, para poder devolverla con sus fotos.
-    if (borrada) mandarAPapelera(borrada);
+    if (!borrada){ openId = null; askDelete = false; renderModal(); return; }
+    // Con apartados vigentes no se borra: el cliente tiene esas unidades reservadas
+    // y su dinero abonado depende de que el apartado siga cuadrando.
+    if (apartadas(borrada) > 0){
+      askDelete = false; renderModal();
+      toast('Tiene unidades en apartados vigentes. Liquida o borra ese apartado primero.');
+      return;
+    }
+    var teniaVentas = vendidas(borrada) > 0;
+    // Se copia a la papelera ANTES de quitarla, para poder devolverla con sus fotos,
+    // y se asienta su paso por la caja para que el dinero no se mueva al borrarla.
+    mandarAPapelera(borrada);
+    cerrarPrenda(borrada);
     state.products = state.products.filter(function(x){ return x.id !== openId; });
     openId = null; askDelete = false;
     render(); save();
-    toast('"' + (borrada ? borrada.nombre : 'Prenda') + '" movida a la papelera.');
+    toast('"' + borrada.nombre + '" movida a la papelera.'
+      + (teniaVentas ? ' El dinero de sus ventas se queda en la caja.' : ''));
     return;
   }
 });
