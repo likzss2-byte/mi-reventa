@@ -57,10 +57,13 @@ export function dinero(n){
   return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const total = a => (a.items || []).reduce((x, it) => x + (it.precioUnitario || 0) * (it.cantidad || 0), 0);
-const abonado = a => (a.abonos || []).reduce((x, ab) => x + (ab.monto || 0), 0);
+// Los datos vienen de Firestore, donde alguien podria haber editado a mano. Un solo
+// registro raro no puede tumbar el envio del dia para todos los demas.
+const numero = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+const total = a => (a.items || []).reduce((x, it) => x + numero(it.precioUnitario) * numero(it.cantidad), 0);
+const abonado = a => (a.abonos || []).reduce((x, ab) => x + numero(ab.monto), 0);
 const restante = a => Math.max(0, total(a) - abonado(a));
-const unidades = a => (a.items || []).reduce((x, it) => x + (it.cantidad || 0), 0);
+const unidades = a => (a.items || []).reduce((x, it) => x + numero(it.cantidad), 0);
 
 // Se avisa tres veces en la vida de un apartado y no mas: dos dias antes, el dia
 // del plazo, y al dia siguiente para contar como quedo. Avisar todos los dias
@@ -68,6 +71,7 @@ const unidades = a => (a.items || []).reduce((x, it) => x + (it.cantidad || 0), 
 export function armarMensaje(apartados, hoy){
   const avisos = [];
   for (const a of apartados){
+    if (!a || typeof a !== 'object') continue;
     if (a.estado === 'liquidado' || a.estado === 'vencido') continue;
     const dias = diasEntre(hoy, a.vence);
     if (dias === null) continue;

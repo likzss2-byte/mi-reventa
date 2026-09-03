@@ -422,6 +422,14 @@ function today(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMo
 
 function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
 
+// Los botones que no son de formulario (vender, guardar cambios) no pasan por la
+// validacion del navegador, asi que el importe se revisa aca. Un signo menos de mas
+// convierte una venta en una fuga de caja.
+var TOPE_IMPORTE = 1e12;
+function importeValido(v){
+  return isFinite(v) && v >= 0 && v <= TOPE_IMPORTE;
+}
+
 function fechaMas(fechaISO, dias){
   var p = String(fechaISO).split('-');
   var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
@@ -461,17 +469,10 @@ function migrate(raw){
   out.proveedores = out.proveedores.map(function(v){
     return { id: v.id || uid('pr'), nombre: v.nombre || '', contacto: v.contacto || '' };
   });
-  // Los textos libres de "donde la compre" que ya existan se convierten en proveedores,
-  // uno por nombre distinto, para no perder de donde vino cada prenda.
-  function proveedorPorNombre(nombre){
-    var clave = nombre.trim().toLowerCase();
-    for (var i = 0; i < out.proveedores.length; i++){
-      if (out.proveedores[i].nombre.trim().toLowerCase() === clave) return out.proveedores[i];
-    }
-    var nuevo = { id: uid('pr'), nombre: nombre.trim(), contacto: '' };
-    out.proveedores.push(nuevo);
-    return nuevo;
-  }
+  // migrate() corre en cada snapshot, asi que no puede crear entidades: la suscripcion
+  // de proveedores volveria a traer la lista del servidor y la prenda se quedaria
+  // apuntando a un proveedor que no existe en ningun lado. El nombre suelto que quedo
+  // en dondeLoCompre lo muestra nombreProveedor() como texto.
   out.products = out.products.map(function(p){
     var q = {
       id: p.id || uid('p'),
@@ -516,9 +517,6 @@ function migrate(raw){
         apartadoId: v.apartadoId || null
       };
     });
-    if (!q.proveedorId && q.dondeLoCompre.trim()){
-      q.proveedorId = proveedorPorNombre(q.dondeLoCompre).id;
-    }
     return q;
   });
   out.gastos = out.gastos.map(function(g){
@@ -644,10 +642,14 @@ function rememberTab(){
 }
 
 function money(v){
-  var n = Math.round(num(v) * 100) / 100;
+  var bruto = Number(v);
+  if (!isFinite(bruto)) return '$--';
+  var n = Math.round(bruto * 100) / 100;
+  // Multiplicar por 100 puede desbordar aunque el numero de entrada fuera finito.
+  if (!isFinite(n)) return (bruto < 0 ? '-' : '') + '$--';
   var sign = n < 0 ? '-' : '';
   var p = Math.abs(n).toFixed(2).split('.');
-  return sign + '$' + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + p[1];
+  return sign + '$' + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + (p[1] || '00');
 }
 
 function esc(v){
@@ -1476,6 +1478,10 @@ function restaurarRespaldo(file){
     }
     state = migrate(datos);
     openId = null; provOpen = false; armedGasto = null; armedProv = null;
+    apOpen = false; apDetalle = null; apAccion = null;
+    papOpen = false; histOpen = false;
+    cerrarVenta(true);
+    ultimoArchivado = 0;   // que quede archivado lo anterior antes de pisarlo
     render(); save();
     toast('Respaldo restaurado: ' + state.products.length + ' prenda' + (state.products.length === 1 ? '' : 's') + '.');
   };
@@ -2451,7 +2457,7 @@ document.addEventListener('click', function(e){
         problema = 'De "' + pv2.nombre + '" (' + (varv.talla || 'sin talla') + ') solo quedan ' + libreV + '.';
         break;
       }
-      if (!(itv.precioUnitario >= 0)){ problema = 'Revisa el precio de "' + pv2.nombre + '".'; break; }
+      if (!importeValido(itv.precioUnitario)){ problema = 'Revisa el precio de "' + pv2.nombre + '".'; break; }
       itv.nombre = pv2.nombre;
       itv.talla = varv.talla || '';
       totalV += itv.precioUnitario * itv.cantidad;
@@ -2645,7 +2651,7 @@ document.addEventListener('click', function(e){
     var apAb = apartado(apDetalle); if (!apAb) return;
     var campoAb = document.getElementById('ap-abono');
     var montoAb = num(campoAb ? campoAb.value : 0);
-    if (montoAb <= 0){ toast('Escribe cuanto abono el cliente.'); return; }
+    if (montoAb <= 0 || !importeValido(montoAb)){ toast('Escribe cuanto abono el cliente.'); return; }
     var faltaAb = restanteDe(apAb);
     if (faltaAb <= 0){ toast('Este apartado ya esta pagado completo.'); return; }
     if (montoAb > faltaAb){
@@ -2663,6 +2669,8 @@ document.addEventListener('click', function(e){
 
   if (act === 'ap-do-liq'){
     var apLiq = apartado(apDetalle); if (!apLiq) return;
+    // Un segundo clic sobre un boton ya obsoleto duplicaria las ventas.
+    if (estadoApartado(apLiq) === 'liquidado'){ apAccion = null; renderApartados(); return; }
     // Si ya se habia vencido, las prendas volvieron al inventario: hay que confirmar
     // que siguen ahi y no se le vendieron a alguien mas.
     var sinStock = null;
@@ -2801,6 +2809,10 @@ document.addEventListener('click', function(e){
     var costo = parseFloat(document.getElementById('m-costo').value);
     var precio = parseFloat(document.getElementById('m-precio').value);
     if (!nombre || isNaN(costo) || isNaN(precio)){ toast('Completa nombre, costo y precio de venta.'); return; }
+    if (!importeValido(costo) || !importeValido(precio)){
+      toast('El costo y el precio no pueden ser negativos.');
+      return;
+    }
     pu.variantes = readTallaRows('m-tallas', pu.variantes, pu);
     pu.nombre = nombre;
     pu.proveedorId = resolverProveedor('m-prov');
@@ -2823,6 +2835,7 @@ document.addEventListener('click', function(e){
     var libre = stockDe(ps, variante);
     if (cant > libre){ toast('Solo quedan ' + libre + ' de esa talla.'); return; }
     if (isNaN(precioU)){ toast('Escribe el precio de venta.'); return; }
+    if (!importeValido(precioU)){ toast('El precio de venta no puede ser negativo.'); return; }
     ps.ventas.push({ id: uid('s'), varianteId: vid, cantidad: cant, precioUnitario: precioU, fecha: fecha });
     render(); save();
     toast('Venta registrada: ' + money(precioU * cant) + '.');
@@ -2878,6 +2891,10 @@ document.addEventListener('submit', function(e){
     var costo = parseFloat(document.getElementById('f-costo').value);
     var precio = parseFloat(document.getElementById('f-precio').value);
     if (!nombre || isNaN(costo) || isNaN(precio)){ toast('Completa nombre, costo y precio de venta.'); return; }
+    if (!importeValido(costo) || !importeValido(precio)){
+      toast('El costo y el precio no pueden ser negativos.');
+      return;
+    }
     var esInicial = document.getElementById('f-inicial').checked;
     var variantes = readTallaRows('f-tallas', null, null);
     state.products.unshift({
@@ -2908,6 +2925,7 @@ document.addEventListener('submit', function(e){
     var monto = parseFloat(document.getElementById('g-monto').value);
     var fechaMov = document.getElementById('g-fecha').value || today();
     if (!concepto || isNaN(monto)){ toast('Escribe el concepto y el monto.'); return; }
+    if (!importeValido(monto)){ toast('El monto del gasto no puede ser negativo.'); return; }
     state.gastos.unshift({
       id: uid('g'),
       concepto: concepto,
